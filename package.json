@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backend:dev": "npm --prefix server run dev",
+    "backend:start": "npm --prefix server run start",
+    "backend:test": "npm --prefix server run test"
   },
   "dependencies": {
     "react": "^19.2.8",
