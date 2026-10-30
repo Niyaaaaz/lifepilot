@@ -1,0 +1,27 @@
+.feature-visual.gaming {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-visual.gaming > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.feature-visual.gaming > div i {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  border: 1px solid rgba(126, 151, 255, .24);
+  border-radius: 9px;
+  background: rgba(126, 151, 255, .1);
+  font-size: 15px;
+  font-style: normal;
+}
+
+.feature-visual.gaming > div b {
+  margin-left: 5px;
+}

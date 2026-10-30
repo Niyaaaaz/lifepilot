@@ -1,0 +1,23 @@
+.premium-site {
+  --p-bg: #111814;
+  --p-surface: #1b241e;
+  --p-surface2: #252f28;
+  --p-line: rgba(228, 238, 216, .13);
+  --p-text: #f4f2e8;
+  --p-muted: #a3ad9e;
+  --p-blue: #c4df75;
+  --p-violet: #e6a17b;
+  --p-mint: #70c6ad;
+}
+
+.premium-site.light {
+  --p-bg: #f4f5ed;
+  --p-surface: #fff;
+  --p-surface2: #e9eee2;
+  --p-line: rgba(32, 48, 37, .14);
+  --p-text: #20291f;
+  --p-muted: #657260;
+  --p-blue: #607d32;
+  --p-violet: #b56543;
+  --p-mint: #287e69;
+}

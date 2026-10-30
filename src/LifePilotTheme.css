@@ -1,0 +1,1247 @@
+:root {
+  --life-bg: #f3f4f2;
+  --life-sidebar: #fafaf8;
+  --life-card: #fafaf8;
+  --life-primary: #526b78;
+  --life-button: #526b78;
+  --life-sage: #78918c;
+  --life-bronze: #b58a62;
+  --life-text: #303a40;
+  --life-muted: #727b80;
+  --life-border: #dde1de;
+  --life-hover: #e8ece9;
+  --life-success: #63856e;
+  --life-warning: #c49a5a;
+  --life-error: #b96c68;
+  --life-input: #f7f8f6;
+  color-scheme: light;
+  --bg: var(--life-bg);
+  --surface: var(--life-card);
+  --surface-2: var(--life-input);
+  --line: var(--life-border);
+  --white: var(--life-text);
+  --muted: var(--life-muted);
+  --blue: var(--life-primary);
+  --violet: var(--life-bronze);
+  --mint: var(--life-success);
+  --yellow: var(--life-warning);
+  --coral: var(--life-error);
+  --shadow: 0 8px 22px rgba(48, 58, 64, .06);
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  color: var(--life-text);
+  background: var(--life-bg);
+}
+
+html[data-theme='dark'] {
+  --life-bg: #20272b;
+  --life-sidebar: #252e33;
+  --life-card: #2c363b;
+  --life-elevated: #333f45;
+  --life-primary: #8fafbd;
+  --life-button: #526b78;
+  --life-sage: #91aaa0;
+  --life-bronze: #c4a17a;
+  --life-text: #e8eceb;
+  --life-muted: #b0babd;
+  --life-subtle: #89969a;
+  --life-border: #414d52;
+  --life-hover: #374349;
+  --life-success: #91b49a;
+  --life-warning: #d7b477;
+  --life-error: #d58c88;
+  --life-input: #293338;
+  --bg: var(--life-bg);
+  --surface: var(--life-card);
+  --surface-2: var(--life-input);
+  --line: var(--life-border);
+  --white: var(--life-text);
+  --muted: var(--life-muted);
+  --blue: var(--life-primary);
+  --violet: var(--life-bronze);
+  --mint: var(--life-success);
+  --yellow: var(--life-warning);
+  --coral: var(--life-error);
+  --shadow: 0 8px 22px rgba(0, 0, 0, .12);
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: var(--life-bg);
+  color: var(--life-text);
+}
+
+body {
+  color-scheme: light;
+}
+
+html[data-theme='dark'] body {
+  color-scheme: dark;
+}
+
+button,
+input,
+select,
+textarea {
+  accent-color: var(--life-primary);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--life-primary);
+  outline-offset: 2px;
+}
+
+.instructor-shell,
+.instructor-shell.light {
+  --dash-bg: var(--life-bg);
+  --dash-surface: var(--life-card);
+  --dash-surface-2: var(--life-input);
+  --dash-line: var(--life-border);
+  --dash-text: var(--life-text);
+  --dash-muted: var(--life-muted);
+  --dash-accent: var(--life-button);
+  --dash-mint: var(--life-success);
+  --dash-orange: var(--life-warning);
+  background: var(--life-bg);
+  color: var(--life-text);
+}
+
+.instructor-shell .instructor-sidebar,
+.instructor-shell .instructor-topbar,
+.instructor-shell .profile-menu,
+.instructor-shell .schedule-card,
+.instructor-shell .panel,
+.instructor-shell .goal-card,
+.instructor-shell .category-card,
+.instructor-shell .stat-card,
+.instructor-shell .planner-item,
+.instructor-shell .overview-card,
+.instructor-shell .dashboard-assistant,
+.instructor-shell .focus-modal,
+.instructor-shell .task-modal,
+.instructor-shell .goal-plan-card,
+.instructor-shell .goal-overview-card,
+.instructor-shell .goal-recommendations article,
+.instructor-shell .goal-summary-card,
+.instructor-shell .gaming-library,
+.instructor-shell .game-card {
+  border-color: var(--life-border);
+  background: var(--life-card);
+  color: var(--life-text);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .045);
+}
+
+.instructor-shell .focus-overlay,
+.instructor-shell .goal-modal-backdrop,
+.instructor-shell .daily-modal-backdrop,
+.instructor-shell .gaming-modal-backdrop {
+  background: rgba(48, 58, 64, .28);
+  backdrop-filter: blur(10px);
+}
+
+.instructor-shell .goal-modal,
+.instructor-shell .daily-modal,
+.instructor-shell .adjust-panel,
+.instructor-shell .gaming-modal {
+  border-color: var(--life-border);
+  background: var(--life-card);
+  color: var(--life-text);
+  box-shadow: 0 14px 36px rgba(48, 58, 64, .12);
+}
+
+.instructor-shell .instructor-topbar {
+  background: rgba(243, 244, 242, .94);
+}
+
+.instructor-shell .instructor-sidebar nav button:hover,
+.instructor-shell .instructor-sidebar nav button.active,
+.instructor-shell .filter-tabs,
+.instructor-shell .filter-tabs button.active,
+.instructor-shell .activity-mark,
+.instructor-shell .status,
+.instructor-shell .goal-plan-status,
+.instructor-shell .goal-roadmap-phase,
+.instructor-shell .gaming-search,
+.instructor-shell .gaming-filters button.active {
+  background: var(--life-hover);
+}
+
+.instructor-shell .mission-hero,
+.instructor-shell .focus-card,
+.instructor-shell .goal-mission,
+.instructor-shell .goal-focus-card {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: linear-gradient(135deg, #e8ece9, #f7f8f6);
+  box-shadow: none;
+}
+
+.instructor-shell .mission-copy h2,
+.instructor-shell .mission-details b,
+.instructor-shell .focus-card h2,
+.instructor-shell .focus-card p,
+.instructor-shell .focus-meta b,
+.instructor-shell .goal-mission h2,
+.instructor-shell .goal-mission p {
+  color: var(--life-text);
+}
+
+.instructor-shell .mission-copy p,
+.instructor-shell .mission-details small,
+.instructor-shell .focus-card p {
+  color: var(--life-muted);
+}
+
+.instructor-shell .orbit-ring,
+.instructor-shell .mission-orbit,
+.instructor-shell .orbit-star {
+  opacity: .38;
+}
+
+.instructor-shell .primary-action,
+.instructor-shell .continue-button,
+.instructor-shell .goal-instructor .primary-action,
+.instructor-shell .goal-instructor .continue-button,
+.instructor-shell .gaming-primary,
+.instructor-shell .game-play-button {
+  border-color: transparent;
+  color: #fafaf8 !important;
+  background: var(--life-primary);
+  box-shadow: none;
+}
+
+.instructor-shell .secondary-action,
+.instructor-shell .goal-instructor .secondary-action,
+.instructor-shell .item-edit,
+.instructor-shell .item-action,
+.instructor-shell .goal-detail-actions button:not(.primary-action),
+.instructor-shell .gaming-filters button,
+.instructor-shell .game-management-actions button {
+  border-color: var(--life-border);
+  color: var(--life-primary);
+  background: transparent;
+}
+
+.instructor-shell .primary-action:hover,
+.instructor-shell .continue-button:hover,
+.instructor-shell .gaming-primary:hover,
+.instructor-shell .game-play-button:hover {
+  background: #445d69;
+  filter: none;
+}
+
+.instructor-shell .planner-item.completed,
+.instructor-shell .status.completed,
+.instructor-shell .status.on-track,
+.instructor-shell .activity-mark.completed,
+.instructor-shell .goal-plan-status.active,
+.instructor-shell .goal-plan-status.completed,
+.instructor-shell .goal-success,
+.instructor-shell .daily-notice,
+.instructor-shell .gaming-notice {
+  color: var(--life-success);
+}
+
+.instructor-shell .goal-plan-status.paused,
+.instructor-shell .status.missed,
+.instructor-shell .status.behind,
+.instructor-shell .goal-warning,
+.instructor-shell .goal-storage-error {
+  color: var(--life-warning);
+}
+
+.instructor-shell .danger-action,
+.instructor-shell .goal-form-error,
+.instructor-shell .goal-create-form label > span[role=alert],
+.instructor-shell .gaming-alert,
+.instructor-shell .daily-form-error {
+  color: var(--life-error);
+}
+
+.instructor-shell input:not([type=checkbox]),
+.instructor-shell select,
+.instructor-shell textarea,
+.instructor-shell .goal-search,
+.instructor-shell .gaming-search {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background-color: var(--life-input);
+}
+
+.instructor-shell input::placeholder,
+.instructor-shell textarea::placeholder {
+  color: var(--life-muted);
+}
+
+.instructor-shell .profile-button span,
+.instructor-shell .mini-user > span {
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.daily-dashboard .focus-card {
+  background: linear-gradient(135deg, #e8ece9, #f7f8f6);
+}
+
+.daily-dashboard .planner-item.completed .planner-status,
+.daily-dashboard .retake-task-action {
+  color: var(--life-success);
+}
+
+.daily-dashboard .daily-notice,
+.daily-dashboard .planning-tools-note {
+  border-color: var(--life-border);
+  background: var(--life-card);
+}
+
+.account-shell,
+.account-shell.light {
+  --a-bg: var(--life-bg);
+  --a-surface: var(--life-card);
+  --a-surface2: var(--life-input);
+  --a-line: var(--life-border);
+  --a-text: var(--life-text);
+  --a-muted: var(--life-muted);
+  --a-accent: var(--life-primary);
+  --a-mint: var(--life-success);
+  --a-danger: var(--life-error);
+  background: var(--life-bg);
+  color: var(--life-text);
+}
+
+.account-shell .account-primary,
+.account-shell .account-brand > span,
+.account-shell .toggle-row input:checked + i {
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.account-shell .account-danger {
+  color: #fafaf8;
+  background: var(--life-error);
+}
+
+.account-shell .large-avatar {
+  border-color: var(--life-border);
+  color: var(--life-primary);
+  background: var(--life-hover);
+  box-shadow: none;
+}
+
+.account-shell .account-card,
+.account-shell .account-modal,
+.account-shell .profile-menu,
+.account-shell .account-stat-grid > div {
+  border-color: var(--life-border);
+  background: var(--life-card);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .045);
+}
+
+.account-shell .focus-pills button.selected,
+.account-shell .choice-row button.selected,
+.account-shell .toggle-row input:checked + i {
+  border-color: var(--life-primary);
+  color: var(--life-primary);
+  background: var(--life-hover);
+}
+
+.account-shell .account-toast {
+  border-color: var(--life-border);
+  color: var(--life-success);
+  background: var(--life-card);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .08);
+}
+
+.account-shell .account-modal-backdrop {
+  background: rgba(48, 58, 64, .28);
+  backdrop-filter: blur(10px);
+}
+
+.account-shell input,
+.account-shell textarea,
+.account-shell select {
+  color: var(--life-text);
+  background: var(--life-input);
+}
+
+.auth-page {
+  --auth-bg: var(--life-bg);
+  --auth-ink: var(--life-text);
+  --auth-muted: var(--life-muted);
+  --auth-line: var(--life-border);
+  --auth-accent: var(--life-sage);
+  --auth-accent-dark: var(--life-primary);
+  color: var(--life-text);
+  background: var(--life-bg);
+}
+
+.auth-page .auth-promo {
+  border-right: 1px solid var(--life-border);
+  color: var(--life-text);
+  background: linear-gradient(145deg, #e8ece9, #f3f4f2 72%);
+}
+
+.auth-page .auth-promo .auth-eyebrow,
+.auth-page .auth-promo h1 em,
+.auth-page .auth-brand > span:last-child > span,
+.auth-page .auth-promo-note strong,
+.auth-page .auth-promo-footer span {
+  color: var(--life-primary);
+}
+
+.auth-page .auth-promo-content > p,
+.auth-page .auth-promo-note small,
+.auth-page .auth-promo-footer {
+  color: var(--life-muted);
+}
+
+.auth-page .auth-orbit,
+.auth-page .auth-orbit::before,
+.auth-page .auth-orbit::after,
+.auth-page .auth-promo-note {
+  border-color: rgba(82, 107, 120, .18);
+}
+
+.auth-page .auth-brand-mark {
+  border-color: rgba(82, 107, 120, .24);
+  color: var(--life-primary);
+  background: rgba(82, 107, 120, .07);
+}
+
+.auth-page .auth-eyebrow i {
+  background: var(--life-sage);
+  box-shadow: none;
+}
+
+.auth-page .auth-form-heading h2,
+.auth-page .auth-field > label {
+  color: var(--life-text);
+}
+
+.auth-page .auth-field > input,
+.auth-page .auth-input-wrap {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-input);
+}
+
+.auth-page .auth-field > input:focus,
+.auth-page .auth-input-wrap:focus-within {
+  border-color: var(--life-primary);
+  box-shadow: 0 0 0 3px rgba(82, 107, 120, .12);
+}
+
+.auth-page .auth-field input.has-error,
+.auth-page .auth-input-wrap.has-error > input {
+  border-color: var(--life-error);
+  background: #fbf5f4;
+}
+
+.auth-page .auth-error {
+  color: var(--life-error);
+}
+
+.auth-page .auth-submit {
+  color: #fafaf8;
+  background: var(--life-primary);
+  box-shadow: none;
+}
+
+.auth-page .auth-submit:hover {
+  background: #445d69;
+  box-shadow: 0 5px 14px rgba(48, 58, 64, .12);
+}
+
+.auth-page .auth-notice {
+  border-color: var(--life-border);
+  color: var(--life-success);
+  background: #f0f4f0;
+}
+
+.brain-game-page {
+  --brain-bg: var(--life-bg);
+  --brain-panel: var(--life-card);
+  --brain-panel-2: var(--life-input);
+  --brain-line: var(--life-border);
+  --brain-text: var(--life-text);
+  --brain-muted: var(--life-muted);
+  --brain-accent: var(--life-primary);
+  background: var(--life-bg);
+}
+
+.brain-game-page .brain-game-panel,
+.brain-game-page .brain-game-icon {
+  border-color: var(--life-border);
+  background: var(--life-card);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .045);
+}
+
+.brain-game-page .brain-game-action {
+  border-color: transparent;
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.brain-game-page .brain-game-secondary,
+.brain-game-page .memory-tile,
+.brain-game-page .sequence-board button,
+.brain-game-page .number-display,
+.brain-game-page .sudoku-board select,
+.brain-game-page .spot-board button,
+.brain-game-page .pattern-sequence span,
+.brain-game-page .pattern-sequence b {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-input);
+  box-shadow: none;
+}
+
+.brain-game-page .memory-tile.revealed,
+.brain-game-page .sudoku-board select:disabled {
+  color: var(--life-text);
+  background: var(--life-hover);
+}
+
+.brain-game-page .memory-tile.matched,
+.brain-game-page .spot-board button:disabled {
+  border-color: var(--life-success);
+  color: var(--life-success);
+  background: #eff4f0;
+}
+
+.brain-game-page .brain-game-buttons .selected {
+  border-color: var(--life-primary);
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.brain-game-page .sudoku-board,
+.brain-game-page .chess-board {
+  border-color: var(--life-primary);
+}
+
+.brain-game-page .chess-board span {
+  color: var(--life-text);
+  background: #e8ece9;
+}
+
+.brain-game-page .chess-board span.dark {
+  color: var(--life-text);
+  background: #cbd4d1;
+}
+
+.brain-game-page .reaction-zone {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-hover);
+}
+
+.brain-game-page .reaction-zone.waiting {
+  color: #fffaf8;
+  background: #a96864;
+}
+
+.brain-game-page .reaction-zone.go {
+  color: #fffaf8;
+  background: var(--life-success);
+}
+
+.brain-game-page .brain-game-result {
+  color: var(--life-success);
+}
+
+.premium-site,
+.premium-site.light {
+  --p-bg: var(--life-bg);
+  --p-surface: var(--life-card);
+  --p-surface2: var(--life-input);
+  --p-line: var(--life-border);
+  --p-text: var(--life-text);
+  --p-muted: var(--life-muted);
+  --p-blue: var(--life-primary);
+  --p-violet: var(--life-bronze);
+  --p-mint: var(--life-success);
+  background: var(--life-bg);
+  color: var(--life-text);
+}
+
+.premium-site .premium-nav,
+.premium-site .light .premium-nav {
+  background: rgba(243, 244, 242, .94);
+  backdrop-filter: blur(12px);
+}
+
+.premium-site .premium-button {
+  color: #fafaf8 !important;
+  background: var(--life-primary);
+  box-shadow: none;
+}
+
+.premium-site .premium-button:hover {
+  background: #445d69;
+  box-shadow: 0 6px 16px rgba(48, 58, 64, .12);
+}
+
+.premium-site .premium-hero::before,
+.premium-site .preview-halo,
+.premium-site .final-grid {
+  opacity: .22;
+}
+
+.premium-site .life-core {
+  border-color: rgba(82, 107, 120, .35);
+  background: linear-gradient(145deg, #78918c, #526b78);
+  box-shadow: inset -14px -16px 30px rgba(48, 58, 64, .12), 0 8px 30px rgba(82, 107, 120, .12);
+}
+
+.premium-site .node-icon,
+.premium-site .floating-task,
+.premium-site .preview-chat,
+.premium-site .principle-card,
+.premium-site .destination-panel,
+.premium-site .preview-bubble {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-card);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .06);
+}
+
+.premium-site .destination-panel {
+  --panel-color: var(--life-primary);
+  background: var(--life-card);
+}
+
+.premium-site .panel-gaming {
+  --panel-color: var(--life-sage);
+}
+
+.premium-site .node-gaming {
+  right: 10%;
+  bottom: 16%;
+}
+
+.premium-site .panel-gaming .object-orbit {
+  animation-duration: 12s;
+  transform: rotateX(65deg) rotateZ(19deg);
+}
+
+.premium-site .destination-panel .panel-title,
+.premium-site .destination-panel h3,
+.premium-site .destination-panel .card-top,
+.premium-site .destination-panel > button {
+  color: var(--life-primary);
+  text-shadow: none;
+}
+
+.premium-site .object-core,
+.premium-site .object-chip,
+.premium-site .object-dot,
+.premium-site .coin {
+  border-color: rgba(82, 107, 120, .2);
+  color: var(--life-primary);
+  background: var(--life-hover);
+  box-shadow: none;
+  filter: none;
+}
+
+.premium-site .premium-footer {
+  border-color: var(--life-border);
+  background: #e8ece9;
+}
+
+.premium-site .preview-bubble.ai {
+  background: #e8ece9;
+}
+
+.premium-site .preview-bubble.user,
+.premium-site .task-b > span {
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.premium-site .premium-orbit,
+.premium-site .premium-orbit::before,
+.premium-site .orbit-line,
+.premium-site .orbit-lens,
+.premium-site .destination-panel::before {
+  box-shadow: none;
+}
+
+.marketing-site,
+.marketing-site.light {
+  --m-bg: var(--life-bg);
+  --m-surface: var(--life-card);
+  --m-surface2: var(--life-input);
+  --m-line: var(--life-border);
+  --m-text: var(--life-text);
+  --m-muted: var(--life-muted);
+  --m-blue: var(--life-primary);
+  --m-violet: var(--life-bronze);
+  --m-mint: var(--life-success);
+  background: var(--life-bg);
+  color: var(--life-text);
+}
+
+.landing,
+.landing.dark,
+.landing.light {
+  --bg: var(--life-bg);
+  --surface: var(--life-card);
+  --surface-2: var(--life-input);
+  --line: var(--life-border);
+  --white: var(--life-text);
+  --muted: var(--life-muted);
+  --blue: var(--life-primary);
+  --violet: var(--life-bronze);
+  --mint: var(--life-success);
+  --yellow: var(--life-warning);
+  --coral: var(--life-error);
+  --shadow: 0 8px 22px rgba(48, 58, 64, .06);
+  color: var(--life-text);
+  background: var(--life-bg);
+}
+
+.landing .reset-overlay {
+  background: rgba(48, 58, 64, .28);
+  backdrop-filter: blur(10px);
+}
+
+.landing .reset-modal {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-card);
+  box-shadow: 0 14px 36px rgba(48, 58, 64, .12);
+}
+
+.landing .reset-screen textarea,
+.landing .feeling-grid button {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-input);
+}
+
+.landing .reset-screen h2,
+.landing .safety-screen h2 {
+  color: var(--life-text);
+}
+
+.landing .reset-primary {
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.marketing-site .marketing-nav,
+.marketing-site .marketing-nav.scrolled {
+  background: rgba(243, 244, 242, .94);
+}
+
+.marketing-site .nav-cta,
+.marketing-site .primary-cta,
+.marketing-site .reset-primary {
+  color: #fafaf8;
+  background: var(--life-primary);
+}
+
+.marketing-site .final-cta,
+.marketing-site .preview-window,
+.marketing-site .chat-window,
+.marketing-site .feature-card,
+.marketing-site .journey-step,
+.marketing-site .panel,
+.marketing-site .reset-modal {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-card);
+  box-shadow: 0 8px 22px rgba(48, 58, 64, .06);
+}
+
+.marketing-site .reset-overlay {
+  background: rgba(48, 58, 64, .28);
+  backdrop-filter: blur(10px);
+}
+
+.marketing-site .reset-modal {
+  background: var(--life-card);
+}
+
+.marketing-site .reset-screen textarea,
+.marketing-site .feeling-grid button {
+  border-color: var(--life-border);
+  color: var(--life-text);
+  background: var(--life-input);
+}
+
+.marketing-site .reset-screen h2,
+.marketing-site .reset-screen .safety-screen h2 {
+  color: var(--life-text);
+}
+
+.marketing-site .reset-teaser-button,
+.marketing-site .reset-entry > span {
+  border-color: var(--life-border);
+  color: var(--life-primary);
+  background: var(--life-hover);
+}
+
+.marketing-site .premium-orbit,
+.marketing-site .sun-glow,
+.marketing-site .orbit-glow {
+  opacity: .25;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+}
+
+.theme-select {
+  display: grid;
+  min-width: 130px;
+  gap: 6px;
+  color: var(--life-muted);
+  font-size: 11px;
+}
+
+.theme-select.compact {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.theme-select select {
+  min-height: 36px;
+  border: 1px solid var(--life-border);
+  border-radius: 7px;
+  padding: 0 30px 0 10px;
+  color: var(--life-text);
+  background-color: var(--life-input);
+  font: inherit;
+  font-size: 11px;
+}
+
+.theme-select.compact select {
+  min-height: 32px;
+}
+
+html[data-theme='dark'] {
+  background: #20272b;
+}
+
+html[data-theme='dark'] body,
+html[data-theme='dark'] #root {
+  background: #20272b;
+  color: #e8eceb;
+}
+
+html[data-theme='dark'] .instructor-shell,
+html[data-theme='dark'] .account-shell,
+html[data-theme='dark'] .premium-site,
+html[data-theme='dark'] .marketing-site,
+html[data-theme='dark'] .landing,
+html[data-theme='dark'] .brain-game-page {
+  color: #e8eceb;
+  background-color: #20272b;
+}
+
+html[data-theme='dark'] .instructor-shell .instructor-sidebar,
+html[data-theme='dark'] .account-shell .account-sidebar {
+  border-color: #414d52;
+  background: #252e33;
+}
+
+html[data-theme='dark'] .instructor-shell .instructor-topbar,
+html[data-theme='dark'] .account-shell .account-topbar,
+html[data-theme='dark'] .premium-site .premium-nav,
+html[data-theme='dark'] .marketing-site .marketing-nav,
+html[data-theme='dark'] .marketing-site .marketing-nav.scrolled {
+  border-color: #414d52;
+  background: rgba(37, 46, 51, .96);
+}
+
+html[data-theme='dark'] .instructor-shell .instructor-sidebar nav button:hover,
+html[data-theme='dark'] .instructor-shell .instructor-sidebar nav button.active,
+html[data-theme='dark'] .account-shell .account-sidebar nav button:hover,
+html[data-theme='dark'] .account-shell .account-sidebar nav button.active,
+html[data-theme='dark'] .instructor-shell .filter-tabs,
+html[data-theme='dark'] .instructor-shell .filter-tabs button.active,
+html[data-theme='dark'] .instructor-shell .activity-mark,
+html[data-theme='dark'] .instructor-shell .status,
+html[data-theme='dark'] .instructor-shell .goal-plan-status,
+html[data-theme='dark'] .instructor-shell .goal-roadmap-phase,
+html[data-theme='dark'] .instructor-shell .gaming-search,
+html[data-theme='dark'] .account-shell .focus-pills button.selected,
+html[data-theme='dark'] .account-shell .choice-row button.selected {
+  color: #e8eceb;
+  background-color: #374349;
+}
+
+html[data-theme='dark'] .instructor-shell .mission-hero,
+html[data-theme='dark'] .instructor-shell .focus-card,
+html[data-theme='dark'] .instructor-shell .goal-mission,
+html[data-theme='dark'] .instructor-shell .goal-focus-card {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: linear-gradient(135deg, #333f45, #2c363b);
+}
+
+html[data-theme='dark'] .instructor-shell .mission-copy h2,
+html[data-theme='dark'] .instructor-shell .mission-details b,
+html[data-theme='dark'] .instructor-shell .focus-card h2,
+html[data-theme='dark'] .instructor-shell .focus-card p,
+html[data-theme='dark'] .instructor-shell .focus-meta b,
+html[data-theme='dark'] .instructor-shell .goal-mission h2,
+html[data-theme='dark'] .instructor-shell .goal-mission p {
+  color: #e8eceb;
+}
+
+html[data-theme='dark'] .instructor-shell .mission-copy p,
+html[data-theme='dark'] .instructor-shell .mission-details small,
+html[data-theme='dark'] .instructor-shell .focus-card p {
+  color: #b0babd;
+}
+
+html[data-theme='dark'] .instructor-shell .primary-action,
+html[data-theme='dark'] .instructor-shell .continue-button,
+html[data-theme='dark'] .instructor-shell .goal-instructor .primary-action,
+html[data-theme='dark'] .instructor-shell .goal-instructor .continue-button,
+html[data-theme='dark'] .instructor-shell .gaming-primary,
+html[data-theme='dark'] .instructor-shell .game-play-button,
+html[data-theme='dark'] .account-shell .account-primary,
+html[data-theme='dark'] .auth-page .auth-submit,
+html[data-theme='dark'] .brain-game-page .brain-game-action {
+  color: #ffffff !important;
+  background: #526b78;
+}
+
+html[data-theme='dark'] .instructor-shell .primary-action:hover,
+html[data-theme='dark'] .instructor-shell .continue-button:hover,
+html[data-theme='dark'] .instructor-shell .gaming-primary:hover,
+html[data-theme='dark'] .instructor-shell .game-play-button:hover,
+html[data-theme='dark'] .account-shell .account-primary:hover,
+html[data-theme='dark'] .auth-page .auth-submit:hover,
+html[data-theme='dark'] .brain-game-page .brain-game-action:hover {
+  background: #607986;
+}
+
+html[data-theme='dark'] .instructor-shell .secondary-action,
+html[data-theme='dark'] .instructor-shell .goal-detail-actions button:not(.primary-action),
+html[data-theme='dark'] .instructor-shell .item-edit,
+html[data-theme='dark'] .instructor-shell .item-action,
+html[data-theme='dark'] .account-shell .account-secondary,
+html[data-theme='dark'] .instructor-shell .gaming-filters button,
+html[data-theme='dark'] .brain-game-page .brain-game-secondary {
+  border-color: #414d52;
+  color: #b0babd;
+  background: transparent;
+}
+
+html[data-theme='dark'] .instructor-shell input:not([type=checkbox]),
+html[data-theme='dark'] .instructor-shell select,
+html[data-theme='dark'] .instructor-shell textarea,
+html[data-theme='dark'] .account-shell input,
+html[data-theme='dark'] .account-shell select,
+html[data-theme='dark'] .account-shell textarea,
+html[data-theme='dark'] .auth-page .auth-field > input,
+html[data-theme='dark'] .auth-page .auth-input-wrap,
+html[data-theme='dark'] .brain-game-page .brain-game-answer input,
+html[data-theme='dark'] .brain-game-page .brain-game-secondary,
+html[data-theme='dark'] .brain-game-page .memory-tile,
+html[data-theme='dark'] .brain-game-page .sequence-board button,
+html[data-theme='dark'] .brain-game-page .number-display,
+html[data-theme='dark'] .brain-game-page .sudoku-board select,
+html[data-theme='dark'] .brain-game-page .spot-board button,
+html[data-theme='dark'] .brain-game-page .pattern-sequence span,
+html[data-theme='dark'] .brain-game-page .pattern-sequence b,
+html[data-theme='dark'] .theme-select select {
+  border-color: #414d52;
+  color: #e8eceb;
+  background-color: #293338;
+}
+
+html[data-theme='dark'] input::placeholder,
+html[data-theme='dark'] textarea::placeholder {
+  color: #89969a;
+  opacity: 1;
+}
+
+html[data-theme='dark'] .instructor-shell .planner-item,
+html[data-theme='dark'] .instructor-shell .schedule-card,
+html[data-theme='dark'] .instructor-shell .panel,
+html[data-theme='dark'] .instructor-shell .goal-card,
+html[data-theme='dark'] .instructor-shell .category-card,
+html[data-theme='dark'] .instructor-shell .stat-card,
+html[data-theme='dark'] .instructor-shell .overview-card,
+html[data-theme='dark'] .instructor-shell .dashboard-assistant,
+html[data-theme='dark'] .instructor-shell .profile-menu,
+html[data-theme='dark'] .instructor-shell .goal-plan-card,
+html[data-theme='dark'] .instructor-shell .goal-overview-card,
+html[data-theme='dark'] .instructor-shell .goal-recommendations article,
+html[data-theme='dark'] .instructor-shell .gaming-library,
+html[data-theme='dark'] .instructor-shell .game-card,
+html[data-theme='dark'] .instructor-shell .goal-modal,
+html[data-theme='dark'] .instructor-shell .adjust-panel,
+html[data-theme='dark'] .instructor-shell .gaming-modal,
+html[data-theme='dark'] .instructor-shell .focus-modal,
+html[data-theme='dark'] .account-shell .account-card,
+html[data-theme='dark'] .account-shell .account-modal,
+html[data-theme='dark'] .brain-game-page .brain-game-panel,
+html[data-theme='dark'] .brain-game-page .brain-game-icon {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: #2c363b;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+}
+
+html[data-theme='dark'] .instructor-shell .profile-menu button,
+html[data-theme='dark'] .account-shell .account-action-row button,
+html[data-theme='dark'] .instructor-shell .task-completion-details,
+html[data-theme='dark'] .account-shell .account-action-row small,
+html[data-theme='dark'] .brain-game-page .brain-game-prompt,
+html[data-theme='dark'] .brain-game-page .brain-game-disclaimer {
+  color: #b0babd;
+}
+
+html[data-theme='dark'] .instructor-shell .planner-item.completed .planner-status,
+html[data-theme='dark'] .instructor-shell .status.completed,
+html[data-theme='dark'] .instructor-shell .status.on-track,
+html[data-theme='dark'] .instructor-shell .activity-mark.completed,
+html[data-theme='dark'] .instructor-shell .goal-plan-status.active,
+html[data-theme='dark'] .instructor-shell .goal-plan-status.completed,
+html[data-theme='dark'] .instructor-shell .goal-success,
+html[data-theme='dark'] .instructor-shell .daily-notice,
+html[data-theme='dark'] .instructor-shell .gaming-notice,
+html[data-theme='dark'] .account-shell .account-meta b,
+html[data-theme='dark'] .brain-game-page .brain-game-result {
+  color: #91b49a;
+}
+
+html[data-theme='dark'] .instructor-shell .goal-plan-progress i,
+html[data-theme='dark'] .instructor-shell .overview-progress i,
+html[data-theme='dark'] .instructor-shell .daily-progress i {
+  background: linear-gradient(90deg, #8fafbd, #91aaa0);
+}
+
+html[data-theme='dark'] .instructor-shell .goal-plan-status.paused,
+html[data-theme='dark'] .instructor-shell .status.missed,
+html[data-theme='dark'] .instructor-shell .status.behind,
+html[data-theme='dark'] .instructor-shell .goal-warning,
+html[data-theme='dark'] .instructor-shell .goal-storage-error {
+  color: #d7b477;
+}
+
+html[data-theme='dark'] .instructor-shell .danger-action,
+html[data-theme='dark'] .instructor-shell .goal-form-error,
+html[data-theme='dark'] .instructor-shell .goal-create-form label > span[role=alert],
+html[data-theme='dark'] .instructor-shell .gaming-alert,
+html[data-theme='dark'] .instructor-shell .daily-form-error,
+html[data-theme='dark'] .account-shell .account-danger,
+html[data-theme='dark'] .auth-page .auth-error {
+  color: #d58c88;
+}
+
+html[data-theme='dark'] .auth-page {
+  color: #e8eceb;
+  background: #20272b;
+}
+
+html[data-theme='dark'] .auth-page .auth-promo {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: linear-gradient(145deg, #252e33, #20272b 72%);
+}
+
+html[data-theme='dark'] .auth-page .auth-form-heading h2,
+html[data-theme='dark'] .auth-page .auth-field > label {
+  color: #e8eceb;
+}
+
+html[data-theme='dark'] .auth-page .auth-promo-content > p,
+html[data-theme='dark'] .auth-page .auth-promo-note small,
+html[data-theme='dark'] .auth-page .auth-promo-footer,
+html[data-theme='dark'] .auth-page .auth-switch,
+html[data-theme='dark'] .auth-page .auth-terms,
+html[data-theme='dark'] .auth-page .auth-remember {
+  color: #b0babd;
+}
+
+html[data-theme='dark'] .auth-page .auth-notice {
+  border-color: #414d52;
+  color: #91b49a;
+  background: #2c363b;
+}
+
+html[data-theme='dark'] .account-shell .account-stat-grid > div,
+html[data-theme='dark'] .account-shell .account-card {
+  background: #2c363b;
+}
+
+html[data-theme='dark'] .account-shell .toggle-row input:checked + i {
+  background: #78918c;
+}
+
+html[data-theme='dark'] .account-shell .large-avatar {
+  border-color: #414d52;
+  color: #8fafbd;
+  background: #333f45;
+}
+
+html[data-theme='dark'] .brain-game-page .memory-tile.revealed,
+html[data-theme='dark'] .brain-game-page .sudoku-board select:disabled {
+  color: #e8eceb;
+  background: #374349;
+}
+
+html[data-theme='dark'] .brain-game-page .memory-tile.matched,
+html[data-theme='dark'] .brain-game-page .spot-board button:disabled {
+  border-color: #91b49a;
+  color: #91b49a;
+  background: #333f45;
+}
+
+html[data-theme='dark'] .brain-game-page .chess-board span {
+  color: #303a40;
+  background: #cbd4d1;
+}
+
+html[data-theme='dark'] .brain-game-page .chess-board span.dark {
+  color: #e8eceb;
+  background: #526168;
+}
+
+html[data-theme='dark'] .brain-game-page .reaction-zone {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: #374349;
+}
+
+html[data-theme='dark'] .brain-game-page .reaction-zone.waiting {
+  color: #fff;
+  background: #915e5a;
+}
+
+html[data-theme='dark'] .brain-game-page .reaction-zone.go {
+  color: #fff;
+  background: #526f5b;
+}
+
+html[data-theme='dark'] .brain-game-page .sequence-board button.lit {
+  border-color: #8fafbd;
+  filter: brightness(1.12);
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .premium-site .premium-nav,
+html[data-theme='dark'] .premium-site .premium-footer {
+  background: #252e33;
+}
+
+html[data-theme='dark'] .premium-site .premium-button,
+html[data-theme='dark'] .marketing-site .nav-cta,
+html[data-theme='dark'] .marketing-site .primary-cta,
+html[data-theme='dark'] .marketing-site .reset-primary {
+  color: #ffffff !important;
+  background: #526b78;
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .premium-site .premium-button:hover,
+html[data-theme='dark'] .marketing-site .nav-cta:hover,
+html[data-theme='dark'] .marketing-site .primary-cta:hover,
+html[data-theme='dark'] .marketing-site .reset-primary:hover {
+  background: #607986;
+}
+
+html[data-theme='dark'] .premium-site .life-core {
+  border-color: #526b78;
+  background: linear-gradient(145deg, #526b78, #374349);
+  box-shadow: inset -14px -16px 30px rgba(0, 0, 0, .15), 0 8px 24px rgba(0, 0, 0, .16);
+}
+
+html[data-theme='dark'] .premium-site .node-icon,
+html[data-theme='dark'] .premium-site .floating-task,
+html[data-theme='dark'] .premium-site .preview-chat,
+html[data-theme='dark'] .premium-site .principle-card,
+html[data-theme='dark'] .premium-site .destination-panel,
+html[data-theme='dark'] .premium-site .preview-bubble,
+html[data-theme='dark'] .marketing-site .final-cta,
+html[data-theme='dark'] .marketing-site .preview-window,
+html[data-theme='dark'] .marketing-site .chat-window,
+html[data-theme='dark'] .marketing-site .feature-card,
+html[data-theme='dark'] .marketing-site .journey-step,
+html[data-theme='dark'] .marketing-site .panel,
+html[data-theme='dark'] .landing .reset-modal {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: #2c363b;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+}
+
+html[data-theme='dark'] .premium-site .destination-panel,
+html[data-theme='dark'] .premium-site .destination-panel .object-core,
+html[data-theme='dark'] .premium-site .destination-panel .object-chip,
+html[data-theme='dark'] .premium-site .destination-panel .object-dot,
+html[data-theme='dark'] .premium-site .destination-panel .coin {
+  background: #333f45;
+}
+
+html[data-theme='dark'] .premium-site .preview-bubble.ai,
+html[data-theme='dark'] .marketing-site .reset-teaser-button,
+html[data-theme='dark'] .marketing-site .reset-entry > span {
+  color: #e8eceb;
+  background: #333f45;
+}
+
+html[data-theme='dark'] .premium-site .preview-bubble.user,
+html[data-theme='dark'] .premium-site .task-b > span {
+  color: #fff;
+  background: #526b78;
+}
+
+html[data-theme='dark'] .premium-site .premium-hero::before,
+html[data-theme='dark'] .premium-site .preview-halo,
+html[data-theme='dark'] .premium-site .final-grid,
+html[data-theme='dark'] .marketing-site .premium-orbit,
+html[data-theme='dark'] .marketing-site .sun-glow,
+html[data-theme='dark'] .marketing-site .orbit-glow {
+  opacity: .14;
+}
+
+html[data-theme='dark'] .landing .reset-overlay,
+html[data-theme='dark'] .marketing-site .reset-overlay,
+html[data-theme='dark'] .account-shell .account-modal-backdrop,
+html[data-theme='dark'] .instructor-shell .focus-overlay,
+html[data-theme='dark'] .instructor-shell .goal-modal-backdrop,
+html[data-theme='dark'] .instructor-shell .daily-modal-backdrop,
+html[data-theme='dark'] .instructor-shell .gaming-modal-backdrop {
+  background: rgba(15, 20, 23, .68);
+}
+
+html[data-theme='dark'] .landing .reset-modal,
+html[data-theme='dark'] .marketing-site .reset-modal {
+  color: #e8eceb;
+  background: #2c363b;
+}
+
+html[data-theme='dark'] .landing .reset-screen textarea,
+html[data-theme='dark'] .landing .feeling-grid button,
+html[data-theme='dark'] .marketing-site .reset-screen textarea,
+html[data-theme='dark'] .marketing-site .feeling-grid button {
+  border-color: #414d52;
+  color: #e8eceb;
+  background: #293338;
+}
+
+html[data-theme='dark'] .landing .reset-screen h2,
+html[data-theme='dark'] .landing .safety-screen h2,
+html[data-theme='dark'] .marketing-site .reset-screen h2 {
+  color: #e8eceb;
+}

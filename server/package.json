@@ -9,12 +9,27 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test"
+    "test": "node --test test/health.test.js test/auth.test.js test/goals.test.js test/dailyTasks.test.js",
+    "db:generate": "prisma generate",
+    "db:migrate:dev": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:test": "node --test test/database.integration.test.js",
+    "db:health": "node src/scripts/checkDatabase.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "@prisma/client": "^6.19.0",
+    "argon2": "^0.41.1",
+    "express-rate-limit": "^7.5.0",
     "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.0"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }

@@ -16,6 +16,11 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   FRONTEND_ORIGINS: z.string().default(defaultFrontendOrigins),
   JSON_BODY_LIMIT: z.string().regex(/^\d+(?:b|kb|mb)?$/i).default('32kb'),
+  SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
+  SESSION_REMEMBER_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+  DATABASE_URL: z.string().url().refine((value) => ['postgres:', 'postgresql:'].includes(new URL(value).protocol), {
+    message: 'DATABASE_URL must use the postgres or postgresql protocol.',
+  }).optional(),
 })
 
 const result = envSchema.safeParse(process.env)
@@ -23,6 +28,17 @@ const result = envSchema.safeParse(process.env)
 if (!result.success) {
   const details = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')
   throw new Error(`Invalid backend environment configuration: ${details}`)
+}
+
+if (result.data.NODE_ENV === 'production' && !result.data.DATABASE_URL) {
+  throw new Error('Invalid backend environment configuration: DATABASE_URL is required in production.')
+}
+
+if (result.data.NODE_ENV === 'production' && result.data.DATABASE_URL) {
+  const sslMode = new URL(result.data.DATABASE_URL).searchParams.get('sslmode')
+  if (!['require', 'verify-ca', 'verify-full'].includes(sslMode)) {
+    throw new Error('Invalid backend environment configuration: production DATABASE_URL must specify sslmode=require, verify-ca, or verify-full.')
+  }
 }
 
 const frontendOrigins = result.data.FRONTEND_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)

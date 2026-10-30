@@ -1,0 +1,311 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum DurationUnit {
+  DAYS
+  WEEKS
+  MONTHS
+  YEARS
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum GamingSessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+model User {
+  id                 String              @id @default(uuid()) @db.Uuid
+  email              String              @unique @db.VarChar(320)
+  displayName        String?             @db.VarChar(120)
+  authSubject        String?             @unique @db.VarChar(255)
+  passwordHash       String?             @db.VarChar(255)
+  createdAt          DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime            @updatedAt @db.Timestamptz(3)
+  sessions           UserSession[]
+  goals              Goal[]
+  dailyTasks         DailyTask[]
+  taskCompletions    TaskCompletion[]
+  taskSchedules      TaskSchedule[]
+  preferences        UserPreferences?
+  brainTrainingGames BrainTrainingGame[]
+  gamingSessions     GamingSession[]
+
+  @@index([createdAt])
+  @@map("users")
+}
+
+model UserSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique @db.Char(64)
+  expiresAt  DateTime  @db.Timestamptz(3)
+  revokedAt  DateTime? @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(3)
+  lastSeenAt DateTime  @default(now()) @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model Goal {
+  id                 String             @id @default(uuid()) @db.Uuid
+  userId             String             @db.Uuid
+  legacyId           String?            @db.VarChar(120)
+  title              String             @db.VarChar(160)
+  description        String             @default("") @db.Text
+  durationAmount     Float?
+  durationUnit       DurationUnit?
+  startsAt           DateTime           @default(now()) @db.Timestamptz(3)
+  targetDate         DateTime?          @db.Date
+  status             GoalStatus         @default(ACTIVE)
+  category           String?            @db.VarChar(80)
+  currentLevel       String?            @db.VarChar(120)
+  availableMinutes   Int?
+  preferredDays      Int[]              @default([])
+  availableStartTime String?            @db.VarChar(5)
+  availableEndTime   String?            @db.VarChar(5)
+  roadmapData        Json               @default("{}")
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones         GoalMilestone[]
+  monthlyObjectives  MonthlyObjective[]
+  weeklyObjectives   WeeklyObjective[]
+  dailyTasks         DailyTask[]
+
+  @@unique([id, userId])
+  @@unique([userId, legacyId])
+  @@index([userId, status, targetDate])
+  @@index([userId, createdAt])
+  @@map("goals")
+}
+
+model MonthlyObjective {
+  id               String            @id @default(uuid()) @db.Uuid
+  userId           String            @db.Uuid
+  goalId           String            @db.Uuid
+  monthNumber      Int
+  title            String            @db.VarChar(160)
+  description      String            @default("") @db.Text
+  startsOn         DateTime?         @db.Date
+  endsOn           DateTime?         @db.Date
+  successCriteria  String            @default("") @db.Text
+  sortOrder        Int               @default(0)
+  createdAt        DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime          @updatedAt @db.Timestamptz(3)
+  goal             Goal              @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  weeklyObjectives WeeklyObjective[]
+
+  @@unique([id, userId])
+  @@unique([goalId, monthNumber])
+  @@index([userId, goalId, startsOn])
+  @@map("monthly_objectives")
+}
+
+model GoalMilestone {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  goalId      String    @db.Uuid
+  sourceKey   String?   @db.VarChar(80)
+  title       String    @db.VarChar(160)
+  description String    @default("") @db.Text
+  targetDate  DateTime? @db.Date
+  completedAt DateTime? @db.Timestamptz(3)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(3)
+  goal        Goal      @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@unique([goalId, sourceKey])
+  @@index([userId, goalId, targetDate])
+  @@map("goal_milestones")
+}
+
+model WeeklyObjective {
+  id                 String            @id @default(uuid()) @db.Uuid
+  userId             String            @db.Uuid
+  goalId             String            @db.Uuid
+  monthlyObjectiveId String?           @db.Uuid
+  title              String            @db.VarChar(160)
+  description        String            @default("") @db.Text
+  weekNumber         Int
+  startsOn           DateTime?         @db.Date
+  endsOn             DateTime?         @db.Date
+  successCriteria    String            @default("") @db.Text
+  sortOrder          Int               @default(0)
+  createdAt          DateTime          @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime          @updatedAt @db.Timestamptz(3)
+  goal               Goal              @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  monthlyObjective   MonthlyObjective? @relation(fields: [monthlyObjectiveId, userId], references: [id, userId], onDelete: Cascade)
+  dailyTasks         DailyTask[]
+
+  @@unique([id, userId])
+  @@unique([goalId, weekNumber])
+  @@index([userId, goalId, startsOn])
+  @@map("weekly_objectives")
+}
+
+model DailyTask {
+  id                String           @id @default(uuid()) @db.Uuid
+  userId            String           @db.Uuid
+  goalId            String?          @db.Uuid
+  weeklyObjectiveId String?          @db.Uuid
+  title             String           @db.VarChar(180)
+  category          String           @default("Personal") @db.VarChar(80)
+  description       String           @default("") @db.Text
+  priority          TaskPriority     @default(NORMAL)
+  estimatedMinutes  Int
+  status            TaskStatus       @default(NOT_STARTED)
+  isGoalRepetition  Boolean          @default(false)
+  sourceKey         String?          @db.VarChar(120)
+  retakeInProgress  Boolean          @default(false)
+  completedAt       DateTime?        @db.Timestamptz(3)
+  notes             String           @default("") @db.Text
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime         @updatedAt @db.Timestamptz(3)
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal              Goal?            @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  weeklyObjective   WeeklyObjective? @relation(fields: [weeklyObjectiveId, userId], references: [id, userId], onDelete: Cascade)
+  schedules         TaskSchedule[]
+  completions       TaskCompletion[]
+
+  @@unique([id, userId])
+  @@unique([goalId, sourceKey])
+  @@index([userId, status, updatedAt])
+  @@index([userId, goalId, status])
+  @@index([weeklyObjectiveId])
+  @@map("daily_tasks")
+}
+
+model TaskSchedule {
+  id            String         @id @default(uuid()) @db.Uuid
+  userId        String         @db.Uuid
+  taskId        String         @db.Uuid
+  scheduledDate DateTime       @db.Date
+  startsAt      DateTime?      @db.Timestamptz(3)
+  endsAt        DateTime?      @db.Timestamptz(3)
+  startTime     String?        @db.VarChar(5)
+  endTime       String?        @db.VarChar(5)
+  status        ScheduleStatus @default(SCHEDULED)
+  supersedesId  String?        @unique @db.Uuid
+  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task          DailyTask      @relation(fields: [taskId, userId], references: [id, userId], onDelete: Cascade)
+  supersedes    TaskSchedule?  @relation("ScheduleRevisions", fields: [supersedesId], references: [id], onDelete: SetNull)
+  supersededBy  TaskSchedule?  @relation("ScheduleRevisions")
+
+  @@index([userId, scheduledDate, status])
+  @@index([taskId, createdAt])
+  @@map("task_schedules")
+}
+
+model TaskCompletion {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  taskId      String    @db.Uuid
+  completedAt DateTime  @default(now()) @db.Timestamptz(3)
+  notes       String    @default("") @db.Text
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        DailyTask @relation(fields: [taskId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([taskId, completedAt])
+  @@map("task_completions")
+}
+
+model UserPreferences {
+  id            String          @id @default(uuid()) @db.Uuid
+  userId        String          @unique @db.Uuid
+  theme         ThemePreference @default(SYSTEM)
+  timezone      String          @default("UTC") @db.VarChar(80)
+  wakeTime      String?         @db.VarChar(5)
+  sleepTime     String?         @db.VarChar(5)
+  availableDays Int[]           @default([])
+  settings      Json            @default("{}")
+  createdAt     DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt     DateTime        @updatedAt @db.Timestamptz(3)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model BrainTrainingGame {
+  id           String          @id @default(uuid()) @db.Uuid
+  userId       String          @db.Uuid
+  name         String          @db.VarChar(100)
+  description  String          @default("") @db.VarChar(500)
+  category     String          @db.VarChar(80)
+  gameUrl      String          @db.VarChar(2048)
+  thumbnailUrl String?         @db.VarChar(2048)
+  createdAt    DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime        @updatedAt @db.Timestamptz(3)
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions     GamingSession[]
+
+  @@unique([userId, gameUrl])
+  @@index([userId, category])
+  @@map("brain_training_games")
+}
+
+model GamingSession {
+  id              String              @id @default(uuid()) @db.Uuid
+  userId          String              @db.Uuid
+  gameId          String?             @db.Uuid
+  title           String              @db.VarChar(160)
+  status          GamingSessionStatus @default(ACTIVE)
+  startedAt       DateTime            @default(now()) @db.Timestamptz(3)
+  endedAt         DateTime?           @db.Timestamptz(3)
+  durationSeconds Int?
+  notes           String              @default("") @db.Text
+  createdAt       DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime            @updatedAt @db.Timestamptz(3)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game            BrainTrainingGame?  @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@map("gaming_sessions")
+}

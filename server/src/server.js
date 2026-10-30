@@ -1,4 +1,5 @@
 import app from './app.js'
+import { disconnectDatabase } from './config/database.js'
 import { env } from './config/env.js'
 
 const server = app.listen(env.PORT, () => {
@@ -17,6 +18,10 @@ function shutdown(signal) {
       console.error('Error while closing the LifePilot API:', error)
       process.exitCode = 1
     }
+    disconnectDatabase().catch((disconnectError) => {
+      console.error('Error while disconnecting from the database:', disconnectError)
+      process.exitCode = 1
+    })
   })
 }
 

@@ -10,7 +10,13 @@
     "preview": "vite preview",
     "backend:dev": "npm --prefix server run dev",
     "backend:start": "npm --prefix server run start",
-    "backend:test": "npm --prefix server run test"
+    "backend:test": "npm --prefix server run test",
+    "db:generate": "npm --prefix server run db:generate",
+    "db:migrate:dev": "npm --prefix server run db:migrate:dev",
+    "db:migrate:deploy": "npm --prefix server run db:migrate:deploy",
+    "db:status": "npm --prefix server run db:status",
+    "db:health": "npm --prefix server run db:health",
+    "db:test": "npm --prefix server run db:test"
   },
   "dependencies": {
     "react": "^19.2.8",

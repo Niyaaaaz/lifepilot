@@ -5,6 +5,19 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f5f7f8" />
+    <script>
+      try {
+        const savedTheme = localStorage.getItem('lifepilot-theme')
+        const savedPreferences = JSON.parse(localStorage.getItem('lifepilot-preferences') || 'null')
+        const theme = ['light', 'dark', 'system'].includes(savedTheme) ? savedTheme : ['light', 'dark', 'system'].includes(savedPreferences?.theme) ? savedPreferences.theme : 'light'
+        const resolvedTheme = theme === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme
+        document.documentElement.dataset.theme = resolvedTheme
+        document.documentElement.style.colorScheme = resolvedTheme
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'dark' ? '#20272B' : '#F3F4F2')
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
     <title>LifePilot | Personal Life & Growth Instructor</title>
   </head>
   <body>

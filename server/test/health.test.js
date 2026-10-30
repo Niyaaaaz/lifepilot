@@ -45,6 +45,15 @@ test('unknown API routes return a structured not-found response', async () => {
   assert.equal(body.error.code, 'NOT_FOUND')
 })
 
+test('database health reports unconfigured state without leaking configuration', async () => {
+  const response = await fetch(`${baseUrl}/api/health/database`)
+  const body = await response.json()
+
+  assert.equal(response.status, 503)
+  assert.equal(body.error.code, 'DATABASE_NOT_CONFIGURED')
+  assert.equal(body.error.message.includes('postgresql://'), false)
+})
+
 test('CORS allows configured frontend origins and rejects others', async () => {
   const allowed = await fetch(`${baseUrl}/api/health`, {
     headers: { Origin: 'http://127.0.0.1:4173' },
