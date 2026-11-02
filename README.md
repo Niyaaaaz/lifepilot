@@ -1,23 +1,30 @@
 # LifePilot
 
+## Project folders
+
+- `frontend/` contains the React/Vite application, including `src/`, `public/`, and its `index.html`.
+- `backend/` contains the Express API and backend tests.
+- `database/` contains the Prisma schema for MongoDB. Previous PostgreSQL migrations are archived at `database/postgresql-migrations/` and are not used by MongoDB.
+- The root `package.json` provides commands for both apps.
+
 ## Run the frontend
 
-Install dependencies with `npm install`, then start the Vite development server with `npm run dev`.
+From the repository root, install dependencies with `npm install`, then start the Vite development server with `npm run dev`.
 
 ## Run the backend foundation
 
-The API is a separate Node.js/Express application in `server/`. The frontend proxies `/api` requests to it during Vite development and preview.
+The API is a separate Node.js/Express application in `backend/`. The frontend proxies `/api` requests to it during Vite development and preview.
 
 1. Install the backend dependencies from the repository root in PowerShell:
 
    ```sh
-   Push-Location .\server
+   Push-Location .\backend
    npm install
    Copy-Item .env.example .env
    Pop-Location
    ```
 
-   The example values work for local development; change `FRONTEND_ORIGINS` in `server/.env` to the exact browser origin(s) you use.
+   The example values work for local development; change `FRONTEND_ORIGINS` in `backend/.env` to the exact browser origin(s) you use.
 
 2. Start the API in development mode:
 
@@ -45,17 +52,17 @@ Or through the frontend proxy while Vite is running:
 curl http://localhost:5173/api/health
 ```
 
-The expected response includes `"status":"ok"`. This endpoint checks API process health only; application data APIs are not connected yet. Production deployments must configure their frontend host to proxy `/api` to the backend and set `FRONTEND_ORIGINS` to the exact production frontend origin(s).
+The expected response includes `"status":"ok"`. This endpoint checks API process health only; use `GET /api/health/database` to verify MongoDB separately. Production deployments must configure their frontend host to proxy `/api` to the backend and set `FRONTEND_ORIGINS` to the exact production frontend origin(s).
 
 Run backend tests with `npm run backend:test`.
 
 ## Configure authentication
 
-Email/password authentication uses the existing Express, PostgreSQL, and Prisma backend. Passwords are hashed with Argon2id. The API sets a random opaque, HttpOnly, SameSite=Lax cookie; only its SHA-256 token hash is stored in PostgreSQL. Sessions expire after `SESSION_TTL_DAYS` (default 7, maximum 30); choosing “Remember me” uses `SESSION_REMEMBER_TTL_DAYS` (default 30, maximum 90). Production cookies require HTTPS and receive the `Secure` attribute. Auth mutations require an exact configured `Origin`, and login/signup requests are rate limited.
+Email/password authentication uses the existing Express and Prisma backend with MongoDB Community Server. Passwords are hashed with Argon2id. The API sets a random opaque, HttpOnly, SameSite=Lax cookie; only its SHA-256 token hash is stored in MongoDB. Sessions expire after `SESSION_TTL_DAYS` (default 7, maximum 30); choosing “Remember me” uses `SESSION_REMEMBER_TTL_DAYS` (default 30, maximum 90). Production cookies require HTTPS and receive the `Secure` attribute. Auth mutations require an exact configured `Origin`, and login/signup requests are rate limited.
 
 Required backend environment values:
 
-- `DATABASE_URL` — PostgreSQL URL; required in production. Production URLs must include `sslmode=require`, `verify-ca`, or `verify-full`.
+- `DATABASE_URL` — local MongoDB URI, for example `mongodb://127.0.0.1:27017/lifepilot`. Keep credentials private if authentication is enabled.
 - `FRONTEND_ORIGINS` — comma-separated exact browser origins authorized for CORS and authentication form submissions. Set this to the actual deployment origin(s).
 
 Optional values:
@@ -66,20 +73,26 @@ Optional values:
 - `SESSION_REMEMBER_TTL_DAYS` — lifetime when the user selects “Remember me”, from 1 to 90 days (default `30`).
 - `JSON_BODY_LIMIT` — Express JSON body size limit (default `32kb`).
 
-No signing key, service-role key, or frontend database credential is used. Keep `DATABASE_URL` only in the backend environment. To apply the user-session schema migration and regenerate Prisma Client, run:
+No signing key, service-role key, or frontend database credential is used. Keep `DATABASE_URL` only in `backend/.env`. Generate the Prisma Client and synchronize MongoDB collections and indexes from the schema with:
 
 ```powershell
 npm run db:generate
-npm run db:migrate:dev
+npm run db:push
 ```
 
-In deployed environments use `npm run db:migrate:deploy`. Start the API and frontend as described above; authentication requests are proxied under `/api/auth`.
+MongoDB uses schema synchronization rather than SQL migrations. Start the API and frontend as described above; authentication requests are proxied under `/api/auth`.
 
 The existing login and signup pages now create persistent sessions against this API. Refreshing calls `GET /api/auth/me`; private frontend routes redirect to sign-in without a valid session. `POST /api/auth/logout` revokes the database session. Password reset is intentionally not implemented because no email-delivery/verification service is configured. Goal and Daily Instructor routes are described below; all private API reads and writes are scoped to `request.auth.userId`.
 
+## Gaming Session library
+
+Gaming Session combines brain-training and entertainment categories. Built-in and account-added games open a Google search for `play <game name> online` in a new tab; custom games do not need a playable URL or API key. Signed-in users can add/edit/delete their own games, favorite built-in or custom games, and see recently played games. Custom games and image URLs or small uploaded logos are stored in MongoDB; favorites and recent-play timestamps are stored per user in `user_game_preferences`.
+
+The authenticated API is `GET/POST /api/games`, `PATCH/DELETE /api/games/:gameId`, and `PATCH /api/games/preferences/:gameKey`. Apply schema changes with `npm run db:push`.
+
 ## Goal Instructor API
 
-The Goal Instructor now loads goals from the authenticated API and persists roadmap edits in PostgreSQL. All endpoints require a valid LifePilot session:
+The Goal Instructor now loads goals from the authenticated API and persists roadmap edits in MongoDB. All endpoints require a valid LifePilot session:
 
 - `GET /api/goals` — list the signed-in user's goals.
 - `POST /api/goals` — create a goal with its user-selected duration, dates, preferences, monthly objectives, weekly objectives, daily tasks, schedules, and milestones.
@@ -87,7 +100,7 @@ The Goal Instructor now loads goals from the authenticated API and persists road
 - `PATCH /api/goals/:goalId` — update goal details and roadmap content.
 - `DELETE /api/goals/:goalId` — delete an owned goal and its dependent data.
 
-Write requests require the configured trusted `Origin`. The API validates nested request data and scopes every query to the authenticated user. Goal progress is calculated from completed task definitions (not completion-attempt rows), and repeated completions remain in task history. When an edited roadmap removes a completed task, that task and its completion history are retained. The Prisma migration `20261030170000_goal_instructor_api` adds monthly-objective storage and goal/task scheduling metadata; apply all pending migrations with `npm run db:migrate:dev` (or `npm run db:migrate:deploy` in deployment).
+Write requests require the configured trusted `Origin`. The API validates nested request data and scopes every query to the authenticated user. Goal progress is calculated from completed task definitions (not completion-attempt rows), and repeated completions remain in task history. When an edited roadmap removes a completed task, that task and its completion history are retained. The MongoDB schema is in `database/schema.prisma`; run `npm run db:push` after schema changes.
 
 The current roadmap generator is a local, category-guided template; no AI provider or AI API key is configured. No AI credentials are sent to the browser. Older goals that exist only in browser local storage are not silently assigned to an account, because that storage is not associated with a verified user. The Goal Instructor offers an explicit import action with an ownership confirmation; the original browser copy is retained, and imports are idempotent if retried.
 
@@ -102,52 +115,63 @@ Daily Instructor loads goal roadmap schedules and personal tasks for the selecte
 - `POST /api/daily/tasks/:taskId/retake/complete` — record another completion-history entry, with optional notes.
 - `DELETE /api/daily/tasks/:taskId` — delete an owned personal task; goal roadmap tasks are managed in Goal Instructor.
 
-The Daily Instructor uses the existing signed-in session and PostgreSQL persistence; it does not keep a separate local copy. Tasks remain associated with their original goals, repeated attempts are stored as separate completion records without duplicating task definitions, and goal progress continues to count task definitions rather than attempts. Schedule changes create revisions instead of removing previous schedule records. The API validates task changes, rejects time overlaps, enforces saved goal availability, and prevents a completed task from being moved back to an unfinished status. Apply the `20261030180000_daily_instructor_api` migration with the other pending migrations using `npm run db:migrate:dev` (or `npm run db:migrate:deploy` in deployment).
+The Daily Instructor uses the existing signed-in session and MongoDB persistence; it does not keep a separate local copy. Tasks remain associated with their original goals, repeated attempts are stored as separate completion records without duplicating task definitions, and goal progress continues to count task definitions rather than attempts. Schedule changes create revisions instead of removing previous schedule records. The API validates task changes, rejects time overlaps, enforces saved goal availability, and prevents a completed task from being moved back to an unfinished status. Run `npm run db:push` after schema changes.
 
-## Configure PostgreSQL
+## Configure and verify local MongoDB Community Server
 
-The backend uses PostgreSQL through Prisma. Install the backend packages and prepare its environment file from the repository root in PowerShell:
+MongoDB Compass is the client UI; the MongoDB Community Server service must also be installed and running. Prisma's MongoDB connector requires a replica set for transactions used by the application, including signup. For a local single-node replica set:
+
+1. Open the MongoDB service configuration file as Administrator (commonly `C:\Program Files\MongoDB\Server\<version>\bin\mongod.cfg`) and add:
+
+   ```yaml
+   replication:
+     replSetName: rs0
+   ```
+
+2. Restart MongoDB from an Administrator PowerShell:
+
+   ```powershell
+   Restart-Service MongoDB
+   ```
+
+3. Initialize the replica set once:
+
+   ```powershell
+   mongosh "mongodb://127.0.0.1:27017/admin" --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'127.0.0.1:27017'}]})"
+   ```
+
+   Confirm it becomes primary with `mongosh "mongodb://127.0.0.1:27017/admin" --eval "rs.status().myState"`. The result should be `1`.
+
+The schema is in `database/schema.prisma`; the backend loads its environment from `backend/.env`. Install backend packages and prepare the environment file from the repository root in PowerShell:
 
 ```powershell
-Push-Location .\server
+Push-Location .\backend
 npm ci
 Copy-Item .env.example .env
 Pop-Location
 ```
 
-Edit `server/.env` and replace the `DATABASE_URL` placeholders with the connection URL provided by your PostgreSQL administrator or hosting provider. Do not commit this file or put the URL in frontend environment variables. In production, the backend requires a database URL with `sslmode=require`, `sslmode=verify-ca`, or preferably `sslmode=verify-full`. Use a database role limited to this application's database, and keep credentials and production URLs in your deployment's secret manager.
+Edit `backend/.env` and set `DATABASE_URL=mongodb://127.0.0.1:27017/lifepilot`. Never commit this file or put the URI in frontend environment variables.
 
-The schema includes user-owned goals, milestones, weekly objectives, daily tasks, dated schedule records, task-completion attempts, preferences, Brain Training library entries, and gaming sessions. Completion attempts are separate rows linked to a single task definition; the goal-progress service counts completed task definitions, not attempt rows. The Daily Instructor schedule API creates schedule revisions and retains prior schedule records and task-completion history. Password hashes and revocable user sessions are stored in PostgreSQL; passwords are never stored in plain text. Private rows are keyed to a user and have ownership-aware foreign keys, and private feature APIs filter by the authenticated user's ID.
+The schema includes users, sessions, goals, milestones, weekly objectives, daily tasks, schedules, completion attempts, preferences, Brain Training entries, and gaming sessions. Records use MongoDB ObjectIds. Completion attempts are separate records linked to one task definition, and goal progress counts completed task definitions rather than attempts. Passwords are hashed, and private API queries are scoped to the authenticated user.
 
-After setting `DATABASE_URL`, generate the Prisma Client and apply the checked-in migration to a development database:
+Generate the Prisma Client, sync the schema, and run a real health check plus a sample create/read:
 
 ```powershell
 npm run db:generate
-npm run db:migrate:dev
-```
-
-For a deployed database, apply committed migrations without creating new migrations:
-
-```powershell
-npm run db:migrate:deploy
-```
-
-Check migration status and database connectivity:
-
-```powershell
-npm run db:status
+npm run db:push
 npm run db:health
-```
-
-The HTTP database health probe is also available at `GET /api/health/database`; it responds with a generic unavailable status and does not reveal connection details if the database is unconfigured or unreachable.
-
-Test real database connectivity and create/read/update/delete behavior against the configured database:
-
-```powershell
+npm run db:record-test
 npm run db:test
 ```
 
-This integration test creates a uniquely named temporary test user and related records, checks repeated completion attempts and distinct-task goal progress, then removes the user and its test data. Run it only against a development/test database, never production. The schema migration creates tables and constraints but does not insert a user or seed data.
+MongoDB uses schema synchronization rather than SQL migrations. Previous PostgreSQL SQL migrations are retained in `database/postgresql-migrations/` for reference only; they are not applied to MongoDB.
+
+`db:record-test` creates a uniquely named record in `database_connection_checks`, retrieves it, and leaves it in place for inspection. It does not overwrite or delete existing data. The live health endpoint is `GET /api/health/database`; treat the connection as verified only when it returns `{"status":"ok","database":"mongodb"}`.
+
+`db:test` runs a live CRUD and ownership integration test. It creates a uniquely named test user and related records, then deletes only that test user's data; run it against a development/test database, not production.
+
+Start the backend and frontend in separate terminals with `npm run backend:dev` and `npm run dev`. To view the sample in MongoDB Compass, connect to `mongodb://127.0.0.1:27017`, open the `lifepilot` database, and select the `database_connection_checks` collection.
 
 # React + Vite
 

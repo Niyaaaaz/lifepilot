@@ -1,0 +1,339 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../backend/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider     = "mongodb"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+enum GoalStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum DurationUnit {
+  DAYS
+  WEEKS
+  MONTHS
+  YEARS
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  RESCHEDULED
+  CANCELLED
+  COMPLETED
+}
+
+enum GamingSessionStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+enum ThemePreference {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+model User {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  email              String              @unique
+  displayName        String?
+  authSubject        String?             @unique
+  passwordHash       String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  sessions           UserSession[]
+  goals              Goal[]
+  dailyTasks         DailyTask[]
+  taskCompletions    TaskCompletion[]
+  taskSchedules      TaskSchedule[]
+  preferences        UserPreferences?
+  brainTrainingGames BrainTrainingGame[]
+  gamePreferences    UserGamePreference[]
+  gamingSessions     GamingSession[]
+
+  @@index([createdAt])
+  @@map("users")
+}
+
+model UserSession {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @db.ObjectId
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model Goal {
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String             @db.ObjectId
+  legacyId           String?
+  title              String
+  description        String             @default("")
+  durationAmount     Float?
+  durationUnit       DurationUnit?
+  startsAt           DateTime           @default(now())
+  targetDate         DateTime?
+  status             GoalStatus         @default(ACTIVE)
+  category           String?
+  currentLevel       String?
+  availableMinutes   Int?
+  preferredDays      Int[]              @default([])
+  availableStartTime String?
+  availableEndTime   String?
+  roadmapData        Json               @default("{}")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  milestones         GoalMilestone[]
+  monthlyObjectives  MonthlyObjective[]
+  weeklyObjectives   WeeklyObjective[]
+  dailyTasks         DailyTask[]
+
+  @@unique([id, userId])
+  @@unique([userId, legacyId])
+  @@index([userId, status, targetDate])
+  @@index([userId, createdAt])
+  @@map("goals")
+}
+
+model MonthlyObjective {
+  id               String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String            @db.ObjectId
+  goalId           String            @db.ObjectId
+  monthNumber      Int
+  title            String
+  description      String            @default("")
+  startsOn         DateTime?
+  endsOn           DateTime?
+  successCriteria  String            @default("")
+  sortOrder        Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  goal             Goal              @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  weeklyObjectives WeeklyObjective[]
+
+  @@unique([id, userId])
+  @@unique([goalId, monthNumber])
+  @@index([userId, goalId, startsOn])
+  @@map("monthly_objectives")
+}
+
+model GoalMilestone {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  goalId      String    @db.ObjectId
+  sourceKey   String?
+  title       String
+  description String    @default("")
+  targetDate  DateTime?
+  completedAt DateTime?
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  goal        Goal      @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@unique([goalId, sourceKey])
+  @@index([userId, goalId, targetDate])
+  @@map("goal_milestones")
+}
+
+model WeeklyObjective {
+  id                 String            @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String            @db.ObjectId
+  goalId             String            @db.ObjectId
+  monthlyObjectiveId String?           @db.ObjectId
+  title              String
+  description        String            @default("")
+  weekNumber         Int
+  startsOn           DateTime?
+  endsOn             DateTime?
+  successCriteria    String            @default("")
+  sortOrder          Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  goal               Goal              @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  monthlyObjective   MonthlyObjective? @relation(fields: [monthlyObjectiveId, userId], references: [id, userId], onDelete: Cascade)
+  dailyTasks         DailyTask[]
+
+  @@unique([id, userId])
+  @@unique([goalId, weekNumber])
+  @@index([userId, goalId, startsOn])
+  @@map("weekly_objectives")
+}
+
+model DailyTask {
+  id                String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String           @db.ObjectId
+  goalId            String?          @db.ObjectId
+  weeklyObjectiveId String?          @db.ObjectId
+  title             String
+  category          String           @default("Personal")
+  description       String           @default("")
+  priority          TaskPriority     @default(NORMAL)
+  estimatedMinutes  Int
+  status            TaskStatus       @default(NOT_STARTED)
+  isGoalRepetition  Boolean          @default(false)
+  sourceKey         String?
+  retakeInProgress  Boolean          @default(false)
+  completedAt       DateTime?
+  notes             String           @default("")
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal              Goal?            @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  weeklyObjective   WeeklyObjective? @relation(fields: [weeklyObjectiveId, userId], references: [id, userId], onDelete: Cascade)
+  schedules         TaskSchedule[]
+  completions       TaskCompletion[]
+
+  @@unique([id, userId])
+  @@unique([goalId, sourceKey])
+  @@index([userId, status, updatedAt])
+  @@index([userId, goalId, status])
+  @@index([weeklyObjectiveId])
+  @@map("daily_tasks")
+}
+
+model TaskSchedule {
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String         @db.ObjectId
+  taskId        String         @db.ObjectId
+  scheduledDate DateTime
+  startsAt      DateTime?
+  endsAt        DateTime?
+  startTime     String?
+  endTime       String?
+  status        ScheduleStatus @default(SCHEDULED)
+  supersedesId  String?        @unique @db.ObjectId
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task          DailyTask      @relation(fields: [taskId, userId], references: [id, userId], onDelete: Cascade)
+  supersedes    TaskSchedule?  @relation("ScheduleRevisions", fields: [supersedesId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supersededBy  TaskSchedule?  @relation("ScheduleRevisions")
+
+  @@index([userId, scheduledDate, status])
+  @@index([taskId, createdAt])
+  @@map("task_schedules")
+}
+
+model TaskCompletion {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  taskId      String    @db.ObjectId
+  completedAt DateTime  @default(now())
+  notes       String    @default("")
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task        DailyTask @relation(fields: [taskId, userId], references: [id, userId], onDelete: Cascade)
+
+  @@index([userId, completedAt])
+  @@index([taskId, completedAt])
+  @@map("task_completions")
+}
+
+model UserPreferences {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String          @unique @db.ObjectId
+  theme         ThemePreference @default(SYSTEM)
+  timezone      String          @default("UTC")
+  wakeTime      String?
+  sleepTime     String?
+  availableDays Int[]           @default([])
+  settings      Json            @default("{}")
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model BrainTrainingGame {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String          @db.ObjectId
+  name         String
+  description  String          @default("")
+  category     String
+  gameUrl      String
+  thumbnailUrl String?
+  icon         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions     GamingSession[]
+
+  @@unique([userId, gameUrl])
+  @@index([userId, category])
+  @@map("brain_training_games")
+}
+
+model UserGamePreference {
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String    @db.ObjectId
+  gameKey       String
+  isFavorite    Boolean   @default(false)
+  lastPlayedAt  DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameKey])
+  @@index([userId, isFavorite])
+  @@index([userId, lastPlayedAt])
+  @@map("user_game_preferences")
+}
+
+model GamingSession {
+  id              String              @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String              @db.ObjectId
+  gameId          String?             @db.ObjectId
+  title           String
+  status          GamingSessionStatus @default(ACTIVE)
+  startedAt       DateTime            @default(now())
+  endedAt         DateTime?
+  durationSeconds Int?
+  notes           String              @default("")
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game            BrainTrainingGame?  @relation(fields: [gameId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@map("gaming_sessions")
+}
+
+model MongoConnectionCheck {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  checkId   String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("database_connection_checks")
+}
