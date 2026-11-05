@@ -131,6 +131,7 @@ async function loadGoal(goalId, userId, prisma) {
       title: milestone.title,
       outcome: milestone.description,
       date: dateString(milestone.targetDate),
+      status: milestone.completedAt || milestone.status === 'COMPLETED' ? 'completed' : 'pending',
       completedAt: milestone.completedAt?.toISOString() || '',
     })),
     monthlyObjectives: monthlyObjectives.map((month) => ({
@@ -210,6 +211,12 @@ async function syncStructure(prisma, goalId, userId, input, existing = null) {
       description: milestone.outcome,
       targetDate: dateOnly(milestone.date),
       sortOrder: index,
+      status: milestone.status === undefined
+        ? (old?.status || (old?.completedAt ? 'COMPLETED' : 'PENDING'))
+        : (milestone.status === 'completed' ? 'COMPLETED' : 'PENDING'),
+      completedAt: milestone.status === undefined
+        ? old?.completedAt || null
+        : (milestone.status === 'completed' ? old?.completedAt || new Date() : null),
     }
     if (old) {
       await prisma.goalMilestone.update({ where: { id: old.id }, data })

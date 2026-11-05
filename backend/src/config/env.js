@@ -19,6 +19,7 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
   SESSION_REMEMBER_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
   DATABASE_URL: z.string().url().optional(),
+  OPENAI_MODEL: z.string().trim().min(1).max(100).default('gpt-4o-mini'),
 })
 
 const result = envSchema.safeParse(process.env)

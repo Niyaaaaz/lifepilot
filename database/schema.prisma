@@ -54,14 +54,22 @@ enum ThemePreference {
   SYSTEM
 }
 
+enum MilestoneStatus {
+  PENDING
+  COMPLETED
+}
+
 model User {
-  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
-  email              String              @unique
+  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+  email              String               @unique
   displayName        String?
-  authSubject        String?             @unique
+  profileImage       String?
+  isActive           Boolean              @default(true)
+  emailVerified      Boolean              @default(false)
+  authSubject        String?
   passwordHash       String?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
   sessions           UserSession[]
   goals              Goal[]
   dailyTasks         DailyTask[]
@@ -71,6 +79,7 @@ model User {
   brainTrainingGames BrainTrainingGame[]
   gamePreferences    UserGamePreference[]
   gamingSessions     GamingSession[]
+  timetables         Timetable[]
 
   @@index([createdAt])
   @@map("users")
@@ -147,18 +156,19 @@ model MonthlyObjective {
 }
 
 model GoalMilestone {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String    @db.ObjectId
-  goalId      String    @db.ObjectId
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String          @db.ObjectId
+  goalId      String          @db.ObjectId
   sourceKey   String?
   title       String
-  description String    @default("")
+  description String          @default("")
   targetDate  DateTime?
+  status      MilestoneStatus @default(PENDING)
   completedAt DateTime?
-  sortOrder   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  goal        Goal      @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
+  sortOrder   Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  goal        Goal            @relation(fields: [goalId, userId], references: [id, userId], onDelete: Cascade)
 
   @@unique([goalId, sourceKey])
   @@index([userId, goalId, targetDate])
@@ -231,16 +241,17 @@ model TaskSchedule {
   startTime     String?
   endTime       String?
   status        ScheduleStatus @default(SCHEDULED)
-  supersedesId  String?        @unique @db.ObjectId
+  supersedesId  String?        @db.ObjectId
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   task          DailyTask      @relation(fields: [taskId, userId], references: [id, userId], onDelete: Cascade)
   supersedes    TaskSchedule?  @relation("ScheduleRevisions", fields: [supersedesId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supersededBy  TaskSchedule?  @relation("ScheduleRevisions")
+  supersededBy  TaskSchedule[] @relation("ScheduleRevisions")
 
   @@index([userId, scheduledDate, status])
   @@index([taskId, createdAt])
+  @@index([supersedesId])
   @@map("task_schedules")
 }
 
@@ -260,17 +271,20 @@ model TaskCompletion {
 }
 
 model UserPreferences {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  userId        String          @unique @db.ObjectId
-  theme         ThemePreference @default(SYSTEM)
-  timezone      String          @default("UTC")
-  wakeTime      String?
-  sleepTime     String?
-  availableDays Int[]           @default([])
-  settings      Json            @default("{}")
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String          @unique @db.ObjectId
+  theme                ThemePreference @default(SYSTEM)
+  notificationsEnabled Boolean         @default(true)
+  preferredLanguage    String          @default("English")
+  dailyStudyHours      Float?
+  timezone             String          @default("UTC")
+  wakeTime             String?
+  sleepTime            String?
+  availableDays        Int[]           @default([])
+  settings             Json            @default("{}")
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_preferences")
 }
@@ -328,6 +342,23 @@ model GamingSession {
   @@index([userId, startedAt])
   @@index([userId, status])
   @@map("gaming_sessions")
+}
+
+model Timetable {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String   @db.ObjectId
+  startDate          DateTime
+  durationDays       Int
+  activities         Json     @default("[]")
+  generationInput    Json     @default("{}")
+  generationMetadata Json     @default("{}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate])
+  @@index([userId, updatedAt])
+  @@map("timetables")
 }
 
 model MongoConnectionCheck {

@@ -103,11 +103,13 @@
 .brain-category-filters button { display: inline-flex; align-items: center; gap: 6px; }
 .brain-category-filters button > span { font-size: 12px; }
 .brain-game-card { display: flex; flex-direction: column; }
-.brain-game-cover { display: grid; min-height: 164px; flex: none; place-items: center; color: #fff; background: radial-gradient(circle at 50% 35%, rgba(141, 152, 255, .35), transparent 40%), linear-gradient(135deg, #25345a, #503a70 55%, #27625f); text-decoration: none; }
+.brain-game-cover { display: grid; width: 100%; min-height: 164px; flex: none; place-items: center; padding: 0; border: 0; color: #fff; background: radial-gradient(circle at 50% 35%, rgba(141, 152, 255, .35), transparent 40%), linear-gradient(135deg, #25345a, #503a70 55%, #27625f); text-decoration: none; cursor: pointer; }
 .brain-game-cover > span { display: grid; width: 76px; height: 76px; place-items: center; border: 1px solid rgba(255, 255, 255, .2); border-radius: 24px; background: rgba(15, 23, 44, .45); box-shadow: 0 12px 35px rgba(0, 0, 0, .2); font-size: 37px; transition: transform .2s ease; }
 .brain-game-card:hover .brain-game-cover > span { transform: translateY(-3px) scale(1.05); }
-.brain-game-cover > img { z-index: 1; }
-.brain-game-title { min-width: 0; color: var(--game-text); text-decoration: none; }
+.brain-game-cover > img { z-index: 1; width: min(100%, 220px); height: min(100%, 120px); padding: 18px; object-fit: contain; }
+.brain-game-title { min-width: 0; padding: 0; border: 0; color: var(--game-text); background: transparent; text-align: left; text-decoration: none; cursor: pointer; }
+.brain-game-title.game-needs-url { padding: 0; border: 0; color: var(--game-text); background: transparent; text-align: left; }
+.game-needs-url { cursor: pointer; }
 .brain-game-title:hover { color: var(--game-accent); }
 .brain-game-card .game-card-heading > span { max-width: 47%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .brain-game-card .game-card-content { display: flex; flex: 1; flex-direction: column; }
@@ -116,7 +118,7 @@
 .brain-recent { margin: 0 0 20px; }
 .brain-recent h2 { margin: 0 0 9px; font: 700 14px Manrope, sans-serif; }
 .brain-recent > div { display: flex; gap: 9px; overflow-x: auto; padding: 2px 0 7px; }
-.brain-recent-link { display: flex; min-width: 180px; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid var(--game-line); border-radius: 9px; color: var(--game-text); background: var(--game-surface); text-decoration: none; transition: border-color .16s ease, transform .16s ease; }
+.brain-recent-link { display: flex; min-width: 180px; align-items: center; gap: 9px; padding: 10px 12px; border: 1px solid var(--game-line); border-radius: 9px; color: var(--game-text); background: var(--game-surface); text-align: left; text-decoration: none; cursor: pointer; transition: border-color .16s ease, transform .16s ease; }
 .brain-recent-link:hover { transform: translateY(-2px); border-color: var(--game-accent); }
 .brain-recent-link > span { font-size: 18px; }
 .brain-recent-link strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }

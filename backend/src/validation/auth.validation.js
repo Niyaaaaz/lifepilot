@@ -11,6 +11,7 @@ const passwordSchema = z.string()
   .max(128, 'Password must be no more than 128 characters.')
   .regex(/[A-Za-z]/, 'Password must include at least one letter.')
   .regex(/\d/, 'Password must include at least one number.')
+  .refine((password) => Buffer.byteLength(password, 'utf8') <= 72, 'Password must be no more than 72 UTF-8 bytes.')
 
 export const signupBodySchema = z.object({
   name: z.string().trim().min(2, 'Enter your full name.').max(120, 'Name must be 120 characters or fewer.'),

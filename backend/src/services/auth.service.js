@@ -1,23 +1,30 @@
 import { createHash, randomBytes } from 'node:crypto'
 import argon2 from 'argon2'
+import bcrypt from 'bcryptjs'
 import { env } from '../config/env.js'
 import { HttpError } from '../middleware/httpError.js'
 
 const dayMs = 24 * 60 * 60 * 1000
-const passwordHashOptions = {
+const bcryptCost = 12
+const dummyArgon2Hash = argon2.hash(randomBytes(32).toString('hex'), {
   type: argon2.argon2id,
   memoryCost: 19456,
   timeCost: 2,
   parallelism: 1,
-}
-const dummyPasswordHash = argon2.hash(randomBytes(32).toString('hex'), passwordHashOptions)
+})
+const dummyBcryptHash = bcrypt.hash(randomBytes(32).toString('hex'), bcryptCost)
 
 function hashToken(token) {
   return createHash('sha256').update(token).digest('hex')
 }
 
 function publicUser(user) {
-  return { id: user.id, name: user.displayName, email: user.email }
+  return {
+    id: user.id,
+    name: user.displayName,
+    email: user.email,
+    ...(user.profileImage ? { profileImage: user.profileImage } : {}),
+  }
 }
 
 async function createSession(user, prisma, rememberMe = false) {
@@ -25,13 +32,13 @@ async function createSession(user, prisma, rememberMe = false) {
   const ttlDays = rememberMe ? env.SESSION_REMEMBER_TTL_DAYS : env.SESSION_TTL_DAYS
   const expiresAt = new Date(Date.now() + ttlDays * dayMs)
   await prisma.userSession.create({
-    data: { userId: user.id, tokenHash: hashToken(token), expiresAt },
+    data: { userId: user.id, tokenHash: hashToken(token), expiresAt, revokedAt: null },
   })
   return { token, expiresAt, user: publicUser(user) }
 }
 
 export async function registerUser({ name, email, password }, prisma) {
-  const passwordHash = await argon2.hash(password, passwordHashOptions)
+  const passwordHash = await bcrypt.hash(password, bcryptCost)
   try {
     return await prisma.$transaction(async (transaction) => {
       const user = await transaction.user.create({
@@ -49,8 +56,28 @@ export async function registerUser({ name, email, password }, prisma) {
 
 export async function loginUser({ email, password, rememberMe = false }, prisma) {
   const user = await prisma.user.findUnique({ where: { email } })
-  const hashToVerify = user?.passwordHash || await dummyPasswordHash
-  if (!(await argon2.verify(hashToVerify, password)) || !user?.passwordHash) {
+  const passwordHash = user?.passwordHash
+  let validPassword = false
+
+  if (passwordHash?.startsWith('$2')) {
+    const withinBcryptLimit = Buffer.byteLength(password, 'utf8') <= 72
+    validPassword = await bcrypt.compare(password, passwordHash)
+    if (!withinBcryptLimit) validPassword = false
+  } else if (passwordHash?.startsWith('$argon2')) {
+    validPassword = await argon2.verify(passwordHash, password)
+    if (validPassword) {
+      const upgradedHash = await bcrypt.hash(password, bcryptCost)
+      await prisma.user.updateMany({
+        where: { id: user.id, passwordHash },
+        data: { passwordHash: upgradedHash },
+      })
+    }
+  } else {
+    await bcrypt.compare(password, await dummyBcryptHash)
+    await argon2.verify(await dummyArgon2Hash, password)
+  }
+
+  if (!validPassword || !passwordHash || user.isActive === false) {
     throw new HttpError(401, 'INVALID_CREDENTIALS', 'Email or password is incorrect.')
   }
   return createSession(user, prisma, rememberMe)
@@ -62,10 +89,10 @@ export async function findValidSession(token, prisma) {
   const tokenHash = hashToken(token)
   const session = await prisma.userSession.findUnique({
     where: { tokenHash },
-    include: { user: { select: { id: true, displayName: true, email: true } } },
+    include: { user: { select: { id: true, displayName: true, email: true, profileImage: true, isActive: true } } },
   })
 
-  if (!session || session.revokedAt || session.expiresAt <= new Date()) {
+  if (!session || session.revokedAt || session.expiresAt <= new Date() || session.user.isActive === false) {
     if (session && !session.revokedAt) {
       await prisma.userSession.deleteMany({ where: { id: session.id, expiresAt: { lte: new Date() } } })
     }
@@ -81,7 +108,7 @@ export async function findValidSession(token, prisma) {
 export async function revokeSession(token, prisma) {
   if (typeof token !== 'string' || token.length < 32 || token.length > 128) return
   await prisma.userSession.updateMany({
-    where: { tokenHash: hashToken(token), revokedAt: null },
+    where: { tokenHash: hashToken(token) },
     data: { revokedAt: new Date() },
   })
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ThemeContext, useTheme } from './ThemeState'
 
 const THEME_STORAGE_KEY = 'lifepilot-theme'
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolvedTheme === 'dark' ? '#20272B' : '#F3F4F2')
   }, [resolvedTheme])
 
-  const setTheme = (nextTheme) => {
+  const setTheme = useCallback((nextTheme) => {
     if (!['light', 'dark', 'system'].includes(nextTheme)) return
     setThemeState(nextTheme)
     try {
@@ -44,9 +44,9 @@ export function ThemeProvider({ children }) {
     } catch (error) {
       console.error('Unable to save the LifePilot theme preference.', error)
     }
-  }
+  }, [])
 
-  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme])
+  const value = useMemo(() => ({ theme, resolvedTheme, setTheme }), [theme, resolvedTheme, setTheme])
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 

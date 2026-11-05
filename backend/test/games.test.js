@@ -102,6 +102,13 @@ before(async () => {
       next()
     },
   }))
+  app.use('/api/gaming', createGamesRouter({
+    prismaProvider: () => prisma,
+    requireAuth: (request, _response, next) => {
+      request.auth = { userId: request.get('x-test-user') || userA }
+      next()
+    },
+  }))
   app.use(errorHandler)
   server = app.listen(0, '127.0.0.1')
   await new Promise((resolve, reject) => {
@@ -115,69 +122,151 @@ after(async () => {
   if (server) await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
 })
 
-test('game library creates owned games with generated Google links and persists preferences', async () => {
-  const createdResponse = await request('/api/games', {
+test('gaming API saves direct game websites and persists preferences', async () => {
+  const createdResponse = await request('/api/gaming', {
     method: 'POST',
     body: JSON.stringify({
       name: 'Chess & Strategy',
+      gameUrl: 'https://www.chess.com/',
       description: 'A custom game entry.',
-      category: 'Strategy Games',
+      category: 'Chess and Strategy',
     }),
   })
   const createdBody = await createdResponse.json()
   assert.equal(createdResponse.status, 201)
-  assert.equal(createdBody.game.searchUrl, 'https://www.google.com/search?q=play+Chess+%26+Strategy+online')
+  assert.equal(createdBody.game.gameUrl, 'https://www.chess.com/')
+  assert.equal(createdBody.game.searchUrl, undefined)
   const gameId = createdBody.game.id
   const key = `custom-${gameId}`
 
-  const favoriteResponse = await request(`/api/games/preferences/${key}`, {
+  const favoriteResponse = await request(`/api/gaming/preferences/${key}`, {
     method: 'PATCH',
     body: JSON.stringify({ isFavorite: true }),
   })
   assert.equal(favoriteResponse.status, 200)
   assert.equal((await favoriteResponse.json()).preference.isFavorite, true)
 
-  const recentResponse = await request(`/api/games/preferences/${key}`, {
+  const recentResponse = await request(`/api/gaming/preferences/${key}`, {
     method: 'PATCH',
     body: JSON.stringify({ played: true }),
   })
   assert.ok((await recentResponse.json()).preference.lastPlayedAt)
 
-  const listResponse = await request('/api/games')
+  const listResponse = await request('/api/gaming')
   const listed = await listResponse.json()
   assert.equal(listed.games.length, 1)
   assert.equal(listed.preferences[0].gameKey, key)
   assert.equal(listed.preferences[0].isFavorite, true)
 
-  const otherUserResponse = await request(`/api/games/preferences/${key}`, {
+  const otherUserResponse = await request(`/api/gaming/preferences/${key}`, {
     userId: userB,
     method: 'PATCH',
     body: JSON.stringify({ isFavorite: true }),
   })
   assert.equal(otherUserResponse.status, 404)
 
-  const updatedResponse = await request(`/api/games/${gameId}`, {
+  const updatedResponse = await request(`/api/gaming/${gameId}`, {
     method: 'PATCH',
-    body: JSON.stringify({ name: 'Updated Chess', category: 'Chess', description: '', thumbnailUrl: '', icon: '♟️' }),
+    body: JSON.stringify({
+      name: 'Updated Chess',
+      gameUrl: 'https://lichess.org/',
+      category: 'Chess and Strategy',
+      description: '',
+      thumbnailUrl: '',
+      icon: '♟️',
+    }),
   })
   assert.equal(updatedResponse.status, 200)
-  assert.equal((await updatedResponse.json()).game.searchUrl, 'https://www.google.com/search?q=play+Updated+Chess+online')
+  assert.equal((await updatedResponse.json()).game.gameUrl, 'https://lichess.org/')
 
-  const deletedResponse = await request(`/api/games/${gameId}`, { method: 'DELETE' })
+  const deletedResponse = await request(`/api/gaming/${gameId}`, { method: 'DELETE' })
   assert.equal(deletedResponse.status, 204)
+  assert.equal((await request('/api/gaming')).status, 200)
   assert.equal((await request('/api/games')).status, 200)
 })
 
-test('game library rejects unsupported categories and non-image data URLs', async () => {
+test('legacy search links are never returned as playable URLs', async () => {
+  const timestamp = new Date()
+  games.push({
+    id: '0123456789abcdef01234567',
+    userId: userA,
+    name: 'Old saved game',
+    description: '',
+    category: 'Focus Games',
+    gameUrl: 'https://www.google.com/search?q=play+old+saved+game',
+    thumbnailUrl: null,
+    icon: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+
+  try {
+    const response = await request('/api/games')
+    const result = await response.json()
+    const legacyGame = result.games.find((game) => game.id === '0123456789abcdef01234567')
+    assert.equal(legacyGame.gameUrl, '')
+    assert.equal(legacyGame.category, 'Focus and Concentration')
+  } finally {
+    const index = games.findIndex((game) => game.id === '0123456789abcdef01234567')
+    if (index !== -1) games.splice(index, 1)
+  }
+})
+
+test('game library accepts HTTP websites and rejects unsafe URLs and categories', async () => {
+  const httpWebsite = await request('/api/games', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'HTTP game',
+      gameUrl: 'http://example.com/game',
+      category: 'Relaxation Games',
+    }),
+  })
+  const httpGame = await httpWebsite.json()
+  assert.equal(httpWebsite.status, 201)
+  assert.equal(httpGame.game.gameUrl, 'http://example.com/game')
+  await request(`/api/games/${httpGame.game.id}`, { method: 'DELETE' })
+
   const invalidCategory = await request('/api/games', {
     method: 'POST',
-    body: JSON.stringify({ name: 'Bad category', category: 'Unknown', description: '', thumbnailUrl: '' }),
+    body: JSON.stringify({
+      name: 'Bad category',
+      gameUrl: 'https://example.com/game',
+      category: 'Unknown',
+      description: '',
+      thumbnailUrl: '',
+    }),
   })
   assert.equal(invalidCategory.status, 400)
 
   const invalidImage = await request('/api/games', {
     method: 'POST',
-    body: JSON.stringify({ name: 'Bad image', category: 'Arcade Games', description: '', thumbnailUrl: 'data:text/html;base64,abc' }),
+    body: JSON.stringify({
+      name: 'Bad image',
+      gameUrl: 'https://example.com/game',
+      category: 'Arcade Games',
+      description: '',
+      thumbnailUrl: 'data:text/html;base64,abc',
+    }),
   })
   assert.equal(invalidImage.status, 400)
+
+  const unsafeWebsite = await request('/api/games', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'Unsafe link',
+      gameUrl: 'javascript:alert(1)',
+      category: 'Brain Training',
+    }),
+  })
+  assert.equal(unsafeWebsite.status, 400)
+
+  const searchWebsite = await request('/api/games', {
+    method: 'POST',
+    body: JSON.stringify({
+      name: 'Search page',
+      gameUrl: 'https://www.google.com/search?q=play+games',
+      category: 'Brain Training',
+    }),
+  })
+  assert.equal(searchWebsite.status, 400)
 })

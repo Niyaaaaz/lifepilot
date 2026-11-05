@@ -1,8 +1,10 @@
 import { getPrismaClient } from '../config/database.js'
 import {
   completeTaskRetake,
+  completeDailyTask,
   createPersonalTask,
   deletePersonalTask,
+  getDailyTask,
   listDailyTasks,
   startTaskRetake,
   updateDailyTask,
@@ -14,6 +16,10 @@ export function createDailyTasksController(prismaProvider = getPrismaClient) {
       const { from, to } = request.validated.query
       const tasks = await listDailyTasks(request.auth.userId, from, to, prismaProvider())
       response.status(200).json({ tasks })
+    },
+    get: async (request, response) => {
+      const task = await getDailyTask(request.validated.params.taskId, request.auth.userId, prismaProvider())
+      response.status(200).json({ task })
     },
     create: async (request, response) => {
       const task = await createPersonalTask(request.validated.body, request.auth.userId, prismaProvider())
@@ -30,6 +36,15 @@ export function createDailyTasksController(prismaProvider = getPrismaClient) {
     },
     startRetake: async (request, response) => {
       const task = await startTaskRetake(request.validated.params.taskId, request.auth.userId, prismaProvider())
+      response.status(200).json({ task })
+    },
+    complete: async (request, response) => {
+      const task = await completeDailyTask(
+        request.validated.params.taskId,
+        request.validated.body.notes,
+        request.auth.userId,
+        prismaProvider(),
+      )
       response.status(200).json({ task })
     },
     completeRetake: async (request, response) => {

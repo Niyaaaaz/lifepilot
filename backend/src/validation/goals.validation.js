@@ -58,6 +58,7 @@ const milestoneSchema = z.object({
   title: z.string().trim().min(1).max(160),
   outcome: z.string().max(10000).optional().default(''),
   date: dateSchema.nullable().optional(),
+  status: z.enum(['pending', 'completed']).optional(),
 }).strict()
 
 export const goalIdParamsSchema = z.object({

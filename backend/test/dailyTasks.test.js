@@ -22,7 +22,7 @@ function matches(record, where = {}) {
   return Object.entries(where).every(([key, value]) => {
     if (key === 'task') return true
     if (key === 'supersededBy') {
-      return value !== null || !database.schedules.some((candidate) => candidate.supersedesId === record.id)
+      return !value?.none || !database.schedules.some((candidate) => candidate.supersedesId === record.id)
     }
     if (key === 'goalId' && value === null) return record[key] === null
     if (key === 'scheduledDate' && value && typeof value === 'object') {
@@ -173,6 +173,18 @@ function apiRequest(path, token = 'user-a', options = {}) {
   })
 }
 
+function tasksApiRequest(path, token = 'user-a', options = {}) {
+  return fetch(`${baseUrl}/api/tasks${path}`, {
+    ...options,
+    headers: {
+      Origin: 'http://127.0.0.1:4173',
+      Cookie: `test_session=${token}`,
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...options.headers,
+    },
+  })
+}
+
 const personalTask = {
   activity: 'Daily reading',
   description: 'Read one chapter.',
@@ -200,6 +212,7 @@ before(async () => {
   app.use(express.json())
   app.use(parseCookies)
   app.use('/api/daily/tasks', createDailyTasksRouter({ prismaProvider: () => prisma, requireAuth: authenticate }))
+  app.use('/api/tasks', createDailyTasksRouter({ prismaProvider: () => prisma, requireAuth: authenticate }))
   app.use(errorHandler)
   server = app.listen(0, '127.0.0.1')
   await new Promise((resolve, reject) => {
@@ -285,6 +298,7 @@ test('daily tasks reject overlaps, invalid availability, and incomplete retake a
     method: 'POST',
     body: JSON.stringify({ ...personalTask, activity: 'Conflicting task', date: '2026-10-31', startTime: '19:15' }),
   })
+
   assert.equal(conflict.status, 409)
 
   const taskId = database.tasks.find((task) => task.userId === userA).id
@@ -313,4 +327,48 @@ test('daily tasks reject overlaps, invalid availability, and incomplete retake a
     body: JSON.stringify({ date: '2026-10-30', startTime: '16:00' }),
   })
   assert.equal(invalidWindow.status, 400)
+})
+
+test('tasks API supports item retrieval, explicit completion, and stable retake history', async () => {
+  const createdResponse = await tasksApiRequest('', 'user-a', {
+    method: 'POST',
+    body: JSON.stringify({ ...personalTask, activity: 'Explicit completion API', date: '2026-11-02', startTime: '10:00' }),
+  })
+  assert.equal(createdResponse.status, 201)
+  const { task: created } = await createdResponse.json()
+
+  const retrieved = await tasksApiRequest(`/${created.id}`)
+  assert.equal(retrieved.status, 200)
+  assert.equal((await retrieved.json()).task.id, created.id)
+  assert.equal((await tasksApiRequest(`/${created.id}`, 'user-b')).status, 404)
+
+  const noRangeList = await tasksApiRequest('')
+  assert.equal(noRangeList.status, 200)
+  assert.ok((await noRangeList.json()).tasks.some((task) => task.id === created.id))
+
+  const completedResponse = await tasksApiRequest(`/${created.id}/complete`, 'user-a', {
+    method: 'POST',
+    body: JSON.stringify({ notes: 'First completion' }),
+  })
+  assert.equal(completedResponse.status, 200)
+  const { task: completed } = await completedResponse.json()
+  assert.equal(completed.status, 'Completed')
+  assert.equal(completed.completionCount, 1)
+
+  const duplicateCompletion = await tasksApiRequest(`/${created.id}/complete`, 'user-a', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+  assert.equal(duplicateCompletion.status, 409)
+
+  await tasksApiRequest(`/${created.id}/retake`, 'user-a', { method: 'POST' })
+  const retake = await tasksApiRequest(`/${created.id}/retake/complete`, 'user-a', {
+    method: 'POST',
+    body: JSON.stringify({ notes: 'Second completion' }),
+  })
+  const { task: retaken } = await retake.json()
+  assert.equal(retaken.status, 'Completed')
+  assert.equal(retaken.completionCount, 2)
+  assert.equal(database.tasks.filter((task) => task.id === created.id).length, 1)
+  assert.equal(database.completions.filter((completion) => completion.taskId === created.id).length, 2)
 })

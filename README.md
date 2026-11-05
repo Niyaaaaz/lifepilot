@@ -26,7 +26,7 @@ The API is a separate Node.js/Express application in `backend/`. The frontend pr
 
    The example values work for local development; change `FRONTEND_ORIGINS` in `backend/.env` to the exact browser origin(s) you use.
 
-2. Start the API in development mode:
+2. Start the API in development mode. It verifies the configured MongoDB connection before listening:
 
    ```sh
    npm run backend:dev
@@ -84,11 +84,13 @@ MongoDB uses schema synchronization rather than SQL migrations. Start the API an
 
 The existing login and signup pages now create persistent sessions against this API. Refreshing calls `GET /api/auth/me`; private frontend routes redirect to sign-in without a valid session. `POST /api/auth/logout` revokes the database session. Password reset is intentionally not implemented because no email-delivery/verification service is configured. Goal and Daily Instructor routes are described below; all private API reads and writes are scoped to `request.auth.userId`.
 
+The authenticated account APIs include `GET/PATCH /api/users/me`, `GET/PATCH /api/preferences`, and `GET /api/dashboard`. Profile and preference changes are stored against the signed-in user; password hashes and session tokens are never returned. The Account page loads and saves its editable profile and instructor preferences through these endpoints.
+
 ## Gaming Session library
 
-Gaming Session combines brain-training and entertainment categories. Built-in and account-added games open a Google search for `play <game name> online` in a new tab; custom games do not need a playable URL or API key. Signed-in users can add/edit/delete their own games, favorite built-in or custom games, and see recently played games. Custom games and image URLs or small uploaded logos are stored in MongoDB; favorites and recent-play timestamps are stored per user in `user_game_preferences`.
+Gaming Session combines brain-training and entertainment categories. Built-in games open their listed websites, and account-added games open the saved HTTP/HTTPS URL directly in a new tab. Signed-in users can add/edit/delete their own games, favorite built-in or custom games, and see recently played games. Custom games, website/logo URLs, favorites, and recent-play timestamps are stored in MongoDB.
 
-The authenticated API is `GET/POST /api/games`, `PATCH/DELETE /api/games/:gameId`, and `PATCH /api/games/preferences/:gameKey`. Apply schema changes with `npm run db:push`.
+The authenticated API includes `GET/POST /api/games`, `PATCH/DELETE /api/games/:gameId`, and `PATCH /api/games/preferences/:gameKey`. After schema changes, run `npm run db:generate` and `npm run db:push`, then restart the backend.
 
 ## Goal Instructor API
 
@@ -99,6 +101,8 @@ The Goal Instructor now loads goals from the authenticated API and persists road
 - `GET /api/goals/:goalId` — retrieve one owned goal.
 - `PATCH /api/goals/:goalId` — update goal details and roadmap content.
 - `DELETE /api/goals/:goalId` — delete an owned goal and its dependent data.
+- `GET/POST /api/goals/:goalId/milestones` — list or add milestones to an owned goal.
+- `PATCH/DELETE /api/milestones/:milestoneId` — update or remove an owned milestone.
 
 Write requests require the configured trusted `Origin`. The API validates nested request data and scopes every query to the authenticated user. Goal progress is calculated from completed task definitions (not completion-attempt rows), and repeated completions remain in task history. When an edited roadmap removes a completed task, that task and its completion history are retained. The MongoDB schema is in `database/schema.prisma`; run `npm run db:push` after schema changes.
 
@@ -116,6 +120,20 @@ Daily Instructor loads goal roadmap schedules and personal tasks for the selecte
 - `DELETE /api/daily/tasks/:taskId` — delete an owned personal task; goal roadmap tasks are managed in Goal Instructor.
 
 The Daily Instructor uses the existing signed-in session and MongoDB persistence; it does not keep a separate local copy. Tasks remain associated with their original goals, repeated attempts are stored as separate completion records without duplicating task definitions, and goal progress continues to count task definitions rather than attempts. Schedule changes create revisions instead of removing previous schedule records. The API validates task changes, rejects time overlaps, enforces saved goal availability, and prevents a completed task from being moved back to an unfinished status. Run `npm run db:push` after schema changes.
+
+## AI Timetable Creator
+
+The authenticated AI Timetable Creator generates daily or seven-day plans using the signed-in user's supplied hours, fixed commitments, meal times, custom activities, style, and priorities, along with saved goals, deadlines, milestones, and pending tasks. Timetables are stored in the MongoDB `timetables` collection and remain scoped to their owner. Existing Daily Instructor tasks can be linked instead of copied; moving or completing a linked timetable activity updates its existing task and completion history. Timetable-only activities do not create duplicate goals or task records.
+
+The feature uses the OpenAI Responses API from the backend. Set `OPENAI_API_KEY` in `backend/.env`; optionally set `OPENAI_MODEL` (defaults to `gpt-4o-mini`). Never put this key in a `VITE_` variable or frontend source. If the key is absent or rejected, generation and natural-language adjustments report an explicit error and do not return simulated AI content. No provider key is currently configured in this environment.
+
+- `POST /api/timetable/generate` — generate and save a daily or weekly timetable.
+- `GET /api/timetable` and `GET /api/timetable/:id` — list previous plans or retrieve one saved plan.
+- `PATCH /api/timetable/:id` — edit, add, remove, complete, or skip activities.
+- `POST /api/timetable/:id/adjust` — request a natural-language adjustment; completed activities are protected.
+- `DELETE /api/timetable/:id` — remove the timetable record without deleting linked Daily Instructor tasks.
+
+After adding the Prisma model, run `npm run db:generate` and `npm run db:push`, then restart the backend. The migration is additive and creates the `timetables` collection; it does not reset or delete existing data. Verify the feature with `npm run backend:test`, then sign in, open **AI Timetable Creator**, generate a day and week, edit an activity, reload a saved timetable, and try a natural-language adjustment. Real AI generation requires an active OpenAI API key and network access.
 
 ## Configure and verify local MongoDB Community Server
 

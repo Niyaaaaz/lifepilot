@@ -14,9 +14,9 @@ const recordIdSchema = z.string().refine(
 )
 
 export const dailyTasksQuerySchema = z.object({
-  from: dateSchema,
-  to: dateSchema,
-}).strict().refine(({ from, to }) => from <= to, {
+  from: dateSchema.optional(),
+  to: dateSchema.optional(),
+}).strict().refine(({ from, to }) => !from || !to || from <= to, {
   path: ['to'],
   message: 'The end date must be on or after the start date.',
 })
@@ -53,4 +53,8 @@ export const updateTaskSchema = z.object({
 
 export const completeRetakeSchema = z.object({
   notes: z.string().max(500).optional().default(''),
+}).strict()
+
+export const completeTaskSchema = z.object({
+  notes: z.string().max(4000).optional(),
 }).strict()

@@ -1,7 +1,7 @@
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const persistedIdPattern = /^(?:[0-9a-f]{24}|[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i
 
 export function isPersistedGoalId(value) {
-  return uuidPattern.test(value || '')
+  return typeof value === 'string' && persistedIdPattern.test(value)
 }
 
 export function toGoalRequest(plan) {

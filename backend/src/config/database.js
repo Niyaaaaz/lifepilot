@@ -22,6 +22,12 @@ export function getPrismaClient() {
   return prisma
 }
 
+export async function connectDatabase() {
+  const client = getPrismaClient()
+  await client.$connect()
+  await client.$runCommandRaw({ ping: 1 })
+}
+
 export async function disconnectDatabase() {
   if (!prisma) return
   await prisma.$disconnect()

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --import ./test/setup.js --test test/health.test.js test/auth.test.js test/goals.test.js test/dailyTasks.test.js test/games.test.js",
+    "test": "node --import ./test/setup.js --test test/health.test.js test/auth.test.js test/account.test.js test/goals.test.js test/dailyTasks.test.js test/games.test.js test/timetable.test.js",
     "db:generate": "prisma generate --schema ../database/schema.prisma",
     "db:push": "prisma db push --schema ../database/schema.prisma",
     "db:record-test": "node src/scripts/testDatabaseRecord.js",
@@ -17,11 +17,12 @@
     "db:health": "node src/scripts/checkDatabase.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "argon2": "^0.41.1",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
-    "@prisma/client": "^6.19.0",
-    "argon2": "^0.41.1",
     "express-rate-limit": "^7.5.0",
     "zod": "^4.6.7"
   },

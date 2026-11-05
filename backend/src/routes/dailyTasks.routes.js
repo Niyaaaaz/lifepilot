@@ -6,6 +6,7 @@ import { requireTrustedOrigin } from '../middleware/requireTrustedOrigin.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import {
   completeRetakeSchema,
+  completeTaskSchema,
   createPersonalTaskSchema,
   dailyTaskIdParamsSchema,
   dailyTasksQuerySchema,
@@ -26,12 +27,20 @@ export function createDailyTasksRouter({ prismaProvider = getPrismaClient, requi
     validateRequest({ body: createPersonalTaskSchema }),
     controller.create,
   )
+  router.get('/:taskId', authenticate, validateTaskId, controller.get)
   router.patch(
     '/:taskId',
     requireTrustedOrigin,
     authenticate,
     validateRequest({ params: dailyTaskIdParamsSchema, body: updateTaskSchema }),
     controller.update,
+  )
+  router.post(
+    '/:taskId/complete',
+    requireTrustedOrigin,
+    authenticate,
+    validateRequest({ params: dailyTaskIdParamsSchema, body: completeTaskSchema }),
+    controller.complete,
   )
   router.post(
     '/:taskId/retake',

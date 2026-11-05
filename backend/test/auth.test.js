@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import argon2 from 'argon2'
 import { after, before, test } from 'node:test'
 import { createApp } from '../src/app.js'
 
@@ -32,6 +33,12 @@ function createMemoryDatabase() {
       },
       async findUnique({ where }) {
         return users.get(where.email) || null
+      },
+      async updateMany({ where, data }) {
+        const user = [...users.values()].find((item) => item.id === where.id && item.passwordHash === where.passwordHash)
+        if (!user) return { count: 0 }
+        Object.assign(user, data)
+        return { count: 1 }
       },
     },
     userSession: {
@@ -102,7 +109,7 @@ test('signup validates input, hashes passwords, creates a session, and returns a
   assert.equal(body.user.email, 'test.user@example.com')
   assert.equal('passwordHash' in body.user, false)
   assert.equal(users.get(body.user.email).passwordHash === password, false)
-  assert.match(users.get(body.user.email).passwordHash, /^\$argon2id\$/)
+  assert.match(users.get(body.user.email).passwordHash, /^\$2[aby]\$/)
   const defaultSession = [...sessions.values()][0]
   const defaultLifetimeDays = (defaultSession.expiresAt.getTime() - Date.now()) / 86400000
   assert.ok(defaultLifetimeDays > 6.9 && defaultLifetimeDays <= 7)
@@ -158,6 +165,9 @@ test('logout revokes the session and expires the browser cookie', async () => {
     body: JSON.stringify({ email: 'test.user@example.com', password }),
   })
   const cookie = cookieFrom(login)
+  const token = decodeURIComponent(cookie.slice(cookie.indexOf('=') + 1))
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  delete sessions.get(tokenHash).revokedAt
   const response = await request('/api/auth/logout', { method: 'POST', headers: { Cookie: cookie } })
 
   assert.equal(response.status, 204)
@@ -206,4 +216,26 @@ test('signup returns field-level validation errors', async () => {
   assert.equal(response.status, 400)
   assert.equal(body.error.code, 'VALIDATION_ERROR')
   assert.ok(body.error.details.some((issue) => issue.path === 'password'))
+})
+
+test('existing Argon2 accounts can sign in and are upgraded to bcrypt hashes', async () => {
+  const legacyPassword = 'LegacyPassphrase2026'
+  const legacyUser = {
+    id: randomUUID(),
+    displayName: 'Legacy User',
+    email: 'legacy.user@example.com',
+    passwordHash: await argon2.hash(legacyPassword),
+    isActive: true,
+    createdAt: new Date(),
+  }
+  users.set(legacyUser.email, legacyUser)
+
+  const response = await request('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: legacyUser.email, password: legacyPassword }),
+  })
+
+  assert.equal(response.status, 200)
+  assert.match(legacyUser.passwordHash, /^\$2[aby]\$/)
+  assert.equal('passwordHash' in (await response.json()).user, false)
 })

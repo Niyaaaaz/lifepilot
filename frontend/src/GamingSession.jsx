@@ -6,82 +6,74 @@ const categories = [
   { name: 'Brain Training', icon: '🧠' },
   { name: 'Memory Games', icon: '🃏' },
   { name: 'Logic and Puzzle Games', icon: '🧩' },
-  { name: 'Focus Games', icon: '🎯' },
-  { name: 'Strategy Games', icon: '♟️' },
-  { name: 'Chess', icon: '♞' },
+  { name: 'Focus and Concentration', icon: '🎯' },
+  { name: 'Chess and Strategy', icon: '♟️' },
   { name: 'Sudoku', icon: '▦' },
   { name: 'Casual Games', icon: '🎮' },
   { name: 'Arcade Games', icon: '👾' },
   { name: 'Racing Games', icon: '🏎️' },
   { name: 'Entertainment Games', icon: '🍿' },
   { name: 'Educational Games', icon: '📚' },
+  { name: 'Relaxation Games', icon: '🌿' },
 ]
 
+function websiteFavicon(gameUrl) {
+  try {
+    return new URL('/favicon.ico', gameUrl).href
+  } catch {
+    return ''
+  }
+}
+
 const builtinGames = [
-  ['memory-card-matching', 'Memory Card Matching', 'Find matching pairs in this quick visual memory game.', 'Memory Games', '🃏'],
-  ['sequence-memory', 'Sequence Memory', 'Watch a sequence of colors and repeat it from memory.', 'Memory Games', '🔢'],
-  ['number-memory', 'Number Memory', 'Remember a number as each round adds another digit.', 'Brain Training', '🔠'],
-  ['sudoku', 'Sudoku', 'Use logic and deduction to complete a number puzzle.', 'Sudoku', '▦'],
-  ['chess', 'Chess', 'Practice tactics and play a timeless strategy game.', 'Chess', '♞'],
-  ['2048', '2048', 'Slide and combine tiles to reach the 2048 tile.', 'Logic and Puzzle Games', '🔢'],
-  ['spot-the-difference', 'Spot the Difference', 'Scan a pattern and identify the one different tile.', 'Focus Games', '🔍'],
-  ['reaction-time-test', 'Reaction Time Test', 'Wait for the signal, then react as quickly as you can.', 'Focus Games', '⚡'],
-  ['pattern-recognition', 'Pattern Recognition', 'Find a rule and choose the next item in a sequence.', 'Logic and Puzzle Games', '🧩'],
-  ['checkers', 'Checkers', 'Plan ahead and outmaneuver your opponent.', 'Strategy Games', '🔴'],
-  ['solitaire', 'Solitaire', 'Unwind with a classic single-player card game.', 'Casual Games', '🂡'],
-  ['pac-man', 'Pac-Man', 'Enjoy an arcade classic full of quick decisions.', 'Arcade Games', '👾'],
-  ['car-racing', 'Car Racing', 'Explore fast-paced online racing games.', 'Racing Games', '🏎️'],
-  ['trivia-quiz', 'Trivia Quiz', 'Test what you know with a lively general-knowledge quiz.', 'Entertainment Games', '❓'],
-  ['typing-challenge', 'Typing Challenge', 'Practice typing speed while learning something new.', 'Educational Games', '⌨️'],
-].map(([id, name, description, category, icon]) => ({
+  ['lumosity', 'Lumosity', 'Play short brain-training exercises for memory, attention, and problem solving.', 'Brain Training', 'https://www.lumosity.com/', '🧠'],
+  ['humanbenchmark-memory', 'Memory Test', 'Challenge your visual memory with Human Benchmark.', 'Memory Games', 'https://humanbenchmark.com/tests/memory', '🃏'],
+  ['humanbenchmark-sequence', 'Sequence Memory', 'Remember and repeat increasingly long color sequences.', 'Memory Games', 'https://humanbenchmark.com/tests/sequence', '🔢'],
+  ['2048', '2048', 'Slide and combine tiles to reach the 2048 tile.', 'Logic and Puzzle Games', 'https://play2048.co/', '🔢'],
+  ['reaction-time', 'Reaction Time Test', 'Wait for the signal, then react as quickly as you can.', 'Focus and Concentration', 'https://humanbenchmark.com/tests/reactiontime', '⚡'],
+  ['chess-com', 'Chess.com', 'Play chess online, solve puzzles, and learn new tactics.', 'Chess and Strategy', 'https://www.chess.com/', '♟️'],
+  ['lichess', 'Lichess', 'Play free online chess and sharpen your strategy.', 'Chess and Strategy', 'https://lichess.org/', '♞'],
+  ['web-sudoku', 'Web Sudoku', 'Solve daily Sudoku puzzles at four difficulty levels.', 'Sudoku', 'https://www.websudoku.com/', '▦'],
+  ['solitaire', 'Solitaire', 'Play classic Klondike solitaire in your browser.', 'Casual Games', 'https://www.solitaire.org/', '🂡'],
+  ['tetris', 'Tetris', 'Play the iconic arcade puzzle game online.', 'Arcade Games', 'https://tetris.com/play-tetris', '🟪'],
+  ['moto-x3m', 'Moto X3M', 'Race through obstacle-filled tracks in this motorcycle game.', 'Racing Games', 'https://www.crazygames.com/game/moto-x3m', '🏎️'],
+  ['wordle', 'Wordle', 'Find the hidden five-letter word in six guesses.', 'Entertainment Games', 'https://www.nytimes.com/games/wordle/index.html', '🔤'],
+  ['sporcle', 'Sporcle Quizzes', 'Explore trivia quizzes across a wide range of topics.', 'Educational Games', 'https://www.sporcle.com/', '📚'],
+  ['minecraft', 'Minecraft', 'Explore, create, and play in the world of Minecraft.', 'Educational Games', 'https://www.minecraft.net/', '⛏️'],
+  ['jigsaw-planet', 'Jigsaw Planet', 'Relax with thousands of picture jigsaw puzzles.', 'Relaxation Games', 'https://www.jigsawplanet.com/', '🌿'],
+].map(([id, name, description, category, gameUrl, icon]) => ({
   id,
   key: id,
   name,
   description,
   category,
-  thumbnailUrl: '',
+  gameUrl,
+  thumbnailUrl: websiteFavicon(gameUrl),
   icon,
-  searchPhrase: id === 'car-racing' ? 'car racing games' : name,
   builtIn: true,
 }))
 
-const emptyGame = { name: '', description: '', category: categories[0].name, thumbnailUrl: '', icon: '🎮' }
+const emptyGame = { name: '', gameUrl: '', description: '', category: categories[0].name, thumbnailUrl: '', icon: '🎮' }
 
-function googleSearchUrl(game) {
-  const query = `play ${game.searchPhrase || game.name} online`
-  return `https://www.google.com/search?${new URLSearchParams({ q: query }).toString()}`
+function isSafeWebUrl(value) {
+  try {
+    const url = new URL(value)
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return false
+    return !(
+      /^(.+\.)?google\.[a-z.]+$/i.test(url.hostname)
+      && /^\/search(?:\/|$)/i.test(url.pathname)
+    )
+  } catch {
+    return false
+  }
 }
 
 function GameCover({ game }) {
   const [imageFailed, setImageFailed] = useState(false)
-  return game.thumbnailUrl && !imageFailed
-    ? <img src={game.thumbnailUrl} alt={`${game.name} logo`} onError={() => setImageFailed(true)} />
+  const imageUrl = game.thumbnailUrl || websiteFavicon(game.gameUrl)
+  return imageUrl && !imageFailed
+    ? <img src={imageUrl} alt={`${game.name} logo`} referrerPolicy="no-referrer" onError={() => setImageFailed(true)} />
     : <span aria-hidden="true">{game.icon || '🎮'}</span>
-}
-
-async function optimizeUploadedImage(file) {
-  if (!file.type.startsWith('image/')) throw new Error('Choose an image file.')
-  const image = await new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const loadedImage = new Image()
-      loadedImage.onload = () => resolve(loadedImage)
-      loadedImage.onerror = () => reject(new Error('That image could not be opened.'))
-      loadedImage.src = reader.result
-    }
-    reader.onerror = () => reject(new Error('That image could not be read.'))
-    reader.readAsDataURL(file)
-  })
-
-  const scale = Math.min(1, 256 / Math.max(image.width, image.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.max(1, Math.round(image.width * scale))
-  canvas.height = Math.max(1, Math.round(image.height * scale))
-  canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height)
-  let dataUrl = canvas.toDataURL('image/jpeg', 0.68)
-  if (dataUrl.length > 24000) dataUrl = canvas.toDataURL('image/jpeg', 0.45)
-  if (dataUrl.length > 25000) throw new Error('That image is too large after compression. Use a smaller image or an HTTPS logo URL.')
-  return dataUrl
 }
 
 export default function GamingSession({ onBackToDashboard }) {
@@ -101,7 +93,7 @@ export default function GamingSession({ onBackToDashboard }) {
 
   useEffect(() => {
     let active = true
-    apiRequest('/games')
+    apiRequest('/gaming')
       .then((result) => {
         if (!active) return
         setCustomGames(result.games || [])
@@ -133,7 +125,7 @@ export default function GamingSession({ onBackToDashboard }) {
   }, [games, activeCategory, favoritesOnly, recentOnly, preferences, search])
 
   const recentGames = useMemo(() => games
-    .filter((game) => preferences[game.key]?.lastPlayedAt)
+    .filter((game) => isSafeWebUrl(game.gameUrl) && preferences[game.key]?.lastPlayedAt)
     .sort((left, right) => new Date(preferences[right.key].lastPlayedAt) - new Date(preferences[left.key].lastPlayedAt))
     .slice(0, 4), [games, preferences])
 
@@ -153,6 +145,7 @@ export default function GamingSession({ onBackToDashboard }) {
     setEditingId(game.id)
     setForm({
       name: game.name,
+      gameUrl: game.gameUrl || '',
       description: game.description,
       category: game.category,
       thumbnailUrl: game.thumbnailUrl || '',
@@ -169,24 +162,15 @@ export default function GamingSession({ onBackToDashboard }) {
     setErrors({})
   }
 
-  const uploadLogo = async (file) => {
-    if (!file) return
-    try {
-      updateForm('thumbnailUrl', await optimizeUploadedImage(file))
-    } catch (uploadError) {
-      setErrors((current) => ({ ...current, thumbnailUrl: uploadError.message }))
-    }
-  }
-
   const submitForm = async (event) => {
     event.preventDefault()
     const nextErrors = {}
     if (!form.name.trim()) nextErrors.name = 'Enter a game name.'
+    if (!isSafeWebUrl(form.gameUrl.trim())) nextErrors.gameUrl = 'Enter a safe HTTP or HTTPS game website URL.'
     if (!categories.some((category) => category.name === form.category)) nextErrors.category = 'Choose a category.'
-    if (form.thumbnailUrl.trim() && !(
-      /^https:\/\/[^\s]+$/i.test(form.thumbnailUrl.trim())
-      || /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(form.thumbnailUrl.trim())
-    )) nextErrors.thumbnailUrl = 'Use an HTTPS logo URL or upload an image.'
+    if (form.thumbnailUrl.trim() && !isSafeWebUrl(form.thumbnailUrl.trim())) {
+      nextErrors.thumbnailUrl = 'Use a safe HTTP or HTTPS logo URL.'
+    }
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length) return
 
@@ -194,13 +178,14 @@ export default function GamingSession({ onBackToDashboard }) {
     setError('')
     const body = JSON.stringify({
       name: form.name.trim(),
+      gameUrl: form.gameUrl.trim(),
       description: form.description.trim(),
       category: form.category,
       thumbnailUrl: form.thumbnailUrl.trim(),
       icon: form.icon || '🎮',
     })
     try {
-      const response = await apiRequest(editingId ? `/games/${editingId}` : '/games', {
+      const response = await apiRequest(editingId ? `/gaming/${editingId}` : '/gaming', {
         method: editingId ? 'PATCH' : 'POST',
         body,
       })
@@ -221,7 +206,7 @@ export default function GamingSession({ onBackToDashboard }) {
     if (!window.confirm(`Remove "${game.name}" from your game library?`)) return
     setError('')
     try {
-      await apiRequest(`/games/${game.id}`, { method: 'DELETE' })
+      await apiRequest(`/gaming/${game.id}`, { method: 'DELETE' })
       setCustomGames((current) => current.filter((item) => item.id !== game.id))
       setPreferences((current) => {
         const next = { ...current }
@@ -237,7 +222,7 @@ export default function GamingSession({ onBackToDashboard }) {
     const previous = preferences[game.key]?.isFavorite || false
     setError('')
     try {
-      const result = await apiRequest(`/games/preferences/${encodeURIComponent(game.key)}`, {
+      const result = await apiRequest(`/gaming/preferences/${encodeURIComponent(game.key)}`, {
         method: 'PATCH',
         body: JSON.stringify({ isFavorite: !previous }),
       })
@@ -249,7 +234,7 @@ export default function GamingSession({ onBackToDashboard }) {
 
   const markPlayed = async (game) => {
     try {
-      const result = await apiRequest(`/games/preferences/${encodeURIComponent(game.key)}`, {
+      const result = await apiRequest(`/gaming/preferences/${encodeURIComponent(game.key)}`, {
         method: 'PATCH',
         body: JSON.stringify({ played: true }),
       })
@@ -260,16 +245,31 @@ export default function GamingSession({ onBackToDashboard }) {
   }
 
   const launchLink = (game, className, children) => (
-    <a
-      className={className}
-      href={game.searchUrl || googleSearchUrl(game)}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => { void markPlayed(game) }}
-      aria-label={`Search Google for how to play ${game.name} online in a new tab`}
-    >
-      {children}
-    </a>
+    isSafeWebUrl(game.gameUrl)
+      ? (
+        <a
+          className={className}
+          href={game.gameUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => {
+            void markPlayed(game)
+          }}
+          aria-label={`Play ${game.name} on its website in a new tab`}
+        >
+          {children}
+        </a>
+      )
+      : (
+        <button
+          className={`${className} game-needs-url`}
+          type="button"
+          onClick={() => openEditForm(game)}
+          aria-label={`Add a website URL for ${game.name}`}
+        >
+          {children}
+        </button>
+      )
   )
 
   return (
@@ -284,7 +284,7 @@ export default function GamingSession({ onBackToDashboard }) {
         <button className="gaming-primary" type="button" onClick={openAddForm}>＋ <span>Add a game</span></button>
       </header>
 
-      <div className="gaming-storage-note"><span>◉</span> Your custom games, favorites, and recent plays are saved to your LifePilot account. Play Now opens a Google search in a new tab.</div>
+      <div className="gaming-storage-note"><span>◉</span> Your custom games, favorites, and recent plays are saved to your LifePilot account. Games open directly on their websites in a new tab.</div>
       {error && <p className="gaming-alert" role="alert">{error}</p>}
 
       {recentGames.length > 0 && (
@@ -319,7 +319,7 @@ export default function GamingSession({ onBackToDashboard }) {
           <div className="gaming-grid">
             {visibleGames.map((game) => (
               <article className="game-card brain-game-card" key={game.key}>
-                {launchLink(game, 'game-cover brain-game-cover', <GameCover game={game} />)}
+                {launchLink(game, 'game-cover brain-game-cover', <GameCover key={game.thumbnailUrl || game.gameUrl} game={game} />)}
                 <div className="game-card-content">
                   <div className="game-card-heading">
                     {launchLink(game, 'brain-game-title', <h2>{game.name}</h2>)}
@@ -327,7 +327,9 @@ export default function GamingSession({ onBackToDashboard }) {
                   </div>
                   <p>{game.description || `Explore ${game.name} online.`}</p>
                   <div className="game-card-actions">
-                    {launchLink(game, 'game-play-button', <>Play Now <span aria-hidden="true">↗</span></>)}
+                    {isSafeWebUrl(game.gameUrl)
+                      ? launchLink(game, 'game-play-button', <>Play Now <span aria-hidden="true">↗</span></>)
+                      : <button className="game-play-button" type="button" onClick={() => openEditForm(game)}>Set website URL</button>}
                     <button className={`game-favorite-button ${preferences[game.key]?.isFavorite ? 'active' : ''}`} type="button" onClick={() => { void toggleFavorite(game) }} aria-label={`${preferences[game.key]?.isFavorite ? 'Remove' : 'Add'} ${game.name} ${preferences[game.key]?.isFavorite ? 'from' : 'to'} favorites`} aria-pressed={Boolean(preferences[game.key]?.isFavorite)}>☆</button>
                   </div>
                   {!game.builtIn && <div className="game-manage-actions"><button type="button" onClick={() => openEditForm(game)}>Edit</button><button type="button" onClick={() => { void deleteGame(game) }}>Delete</button></div>}
@@ -346,15 +348,14 @@ export default function GamingSession({ onBackToDashboard }) {
             <button className="gaming-modal-close" type="button" onClick={closeForm} aria-label="Close game form">×</button>
             <span className="page-eyebrow">{editingId ? 'UPDATE YOUR LIBRARY' : 'GROW YOUR LIBRARY'}</span>
             <h2 id="gaming-form-title">{editingId ? 'Edit game' : 'Add a game'}</h2>
-            <p>Add a game to your account. Play Now will search Google automatically.</p>
+            <p>Add a game to your account with the website you want to open when you play.</p>
             <form className="gaming-form" onSubmit={(event) => { void submitForm(event) }} noValidate>
               <label htmlFor="game-name">Game name<input id="game-name" maxLength="60" value={form.name} onChange={(event) => updateForm('name', event.target.value)} aria-invalid={Boolean(errors.name)} />{errors.name && <span role="alert">{errors.name}</span>}</label>
+              <label htmlFor="game-url">Website URL<input id="game-url" type="url" maxLength="2048" value={form.gameUrl} onChange={(event) => updateForm('gameUrl', event.target.value)} placeholder="https://example.com/game" aria-invalid={Boolean(errors.gameUrl)} />{errors.gameUrl && <span role="alert">{errors.gameUrl}</span>}</label>
               <label htmlFor="game-description">Short description <small>Optional</small><textarea id="game-description" maxLength="180" rows="3" value={form.description} onChange={(event) => updateForm('description', event.target.value)} /></label>
               <label htmlFor="game-category">Category<select id="game-category" value={form.category} onChange={(event) => updateForm('category', event.target.value)}>{categories.map((category) => <option key={category.name} value={category.name}>{category.name}</option>)}</select>{errors.category && <span role="alert">{errors.category}</span>}</label>
-              <label htmlFor="game-thumbnail">Game logo URL <small>Optional</small><input id="game-thumbnail" type="url" value={form.thumbnailUrl.startsWith('data:') ? '' : form.thumbnailUrl} onChange={(event) => updateForm('thumbnailUrl', event.target.value)} placeholder="https://example.com/logo.png" aria-invalid={Boolean(errors.thumbnailUrl)} /></label>
-              <label htmlFor="game-logo-file">Or upload a logo <small>Optional · PNG, JPEG, or WebP</small><input id="game-logo-file" type="file" accept="image/png,image/jpeg,image/webp" onChange={(event) => { void uploadLogo(event.target.files?.[0]) }} aria-invalid={Boolean(errors.thumbnailUrl)} />{errors.thumbnailUrl && <span role="alert">{errors.thumbnailUrl}</span>}</label>
-              {form.thumbnailUrl.startsWith('data:') && <p className="gaming-logo-ready">Uploaded logo ready to save.</p>}
-              <p className="gaming-form-security">No playable URL or API key is needed. A Google search link is generated from the game name.</p>
+              <label htmlFor="game-thumbnail">Logo/image URL <small>Optional · defaults to the game website favicon</small><input id="game-thumbnail" type="url" maxLength="2048" value={form.thumbnailUrl} onChange={(event) => updateForm('thumbnailUrl', event.target.value)} placeholder="https://example.com/logo.png" aria-invalid={Boolean(errors.thumbnailUrl)} />{errors.thumbnailUrl && <span role="alert">{errors.thumbnailUrl}</span>}</label>
+              <p className="gaming-form-security">Only HTTP and HTTPS website links are accepted. Your game opens directly in a new tab.</p>
               <div className="gaming-form-actions"><button type="button" onClick={closeForm} disabled={saving}>Cancel</button><button className="gaming-primary" type="submit" disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save changes' : 'Add game'} {!saving && <span>↗</span>}</button></div>
             </form>
           </section>

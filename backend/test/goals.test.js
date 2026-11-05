@@ -6,6 +6,7 @@ import { createGoalsRouter } from '../src/routes/goals.routes.js'
 import { errorHandler } from '../src/middleware/errorHandler.js'
 import { parseCookies } from '../src/middleware/cookies.js'
 import { HttpError } from '../src/middleware/httpError.js'
+import { isPersistedGoalId } from '../../frontend/src/lib/goals.js'
 
 const origin = 'http://127.0.0.1:4173'
 const userA = randomUUID()
@@ -192,6 +193,12 @@ const goalBody = {
     date: '2026-11-26',
   }],
 }
+
+test('Goal Instructor recognizes MongoDB ObjectIds and UUIDs as persisted records', () => {
+  assert.equal(isPersistedGoalId('507f1f77bcf86cd799439011'), true)
+  assert.equal(isPersistedGoalId(randomUUID()), true)
+  assert.equal(isPersistedGoalId('not-a-database-id'), false)
+})
 
 before(async () => {
   const app = express()

@@ -36,7 +36,7 @@ async function findOwnedTask(taskId, userId, prisma) {
       goal: true,
       weeklyObjective: true,
       schedules: {
-        where: { supersededBy: null },
+        where: { supersededBy: { none: {} } },
         orderBy: { createdAt: 'desc' },
       },
       completions: { orderBy: { completedAt: 'asc' } },
@@ -80,7 +80,7 @@ async function ensureNoOverlap({ userId, taskId, date, startTime, minutes }, pri
       userId,
       scheduledDate: dayDate(date),
       status: { in: ['SCHEDULED', 'COMPLETED'] },
-      supersededBy: null,
+      supersededBy: { none: {} },
       ...(taskId ? { taskId: { not: taskId } } : {}),
     },
     include: { task: true },
@@ -158,10 +158,14 @@ export async function listDailyTasks(userId, from, to, prisma = getPrismaClient(
   const schedules = await prisma.taskSchedule.findMany({
     where: {
       userId,
-      scheduledDate: { gte: dayDate(from), lte: dayDate(to) },
+      ...(from || to ? {
+        scheduledDate: {
+          ...(from ? { gte: dayDate(from) } : {}),
+          ...(to ? { lte: dayDate(to) } : {}),
+        },
+      } : {}),
       status: { in: ['SCHEDULED', 'COMPLETED'] },
-      supersededBy: null,
-      task: { is: { OR: [{ goalId: null }, { goal: { is: { status: 'ACTIVE' } } }] } },
+      supersededBy: { none: {} },
     },
     include: {
       task: {
@@ -173,7 +177,14 @@ export async function listDailyTasks(userId, from, to, prisma = getPrismaClient(
     },
     orderBy: [{ scheduledDate: 'asc' }, { startTime: 'asc' }],
   })
-  return schedules.map((schedule) => taskResponse(schedule.task, schedule))
+  return schedules
+    .filter((schedule) => !schedule.task.goalId || schedule.task.goal?.status === 'ACTIVE')
+    .map((schedule) => taskResponse(schedule.task, schedule))
+}
+
+export async function getDailyTask(taskId, userId, prisma = getPrismaClient()) {
+  const task = await findOwnedTask(taskId, userId, prisma)
+  return taskResponse(task, task.schedules[0] || null)
 }
 
 export async function createPersonalTask(input, userId, prisma = getPrismaClient()) {
@@ -197,10 +208,13 @@ export async function createPersonalTask(input, userId, prisma = getPrismaClient
   return taskResponse({ ...saved.task, completions: [], goal: null }, saved.schedule)
 }
 
-export async function updateDailyTask(taskId, input, userId, prisma = getPrismaClient()) {
-  return prisma.$transaction(async (transaction) => {
+async function updateDailyTaskRecord(taskId, input, userId, prisma, requireNewCompletion = false) {
+  const update = async (transaction) => {
     const task = await findOwnedTask(taskId, userId, transaction)
     const previousStatus = taskStatusName[task.status]
+    if (requireNewCompletion && previousStatus === 'Completed') {
+      throw new HttpError(409, 'TASK_ALREADY_COMPLETED', 'This task is already completed. Use Retake Task to record another attempt.')
+    }
     if (previousStatus === 'Completed' && input.status && input.status !== 'Completed') {
       throw new HttpError(409, 'COMPLETED_TASK_STATUS_LOCKED', 'Completed tasks stay Completed; use Retake Task to record another attempt.')
     }
@@ -262,7 +276,16 @@ export async function updateDailyTask(taskId, input, userId, prisma = getPrismaC
         ? [...task.completions, { completedAt: updatedTask.completedAt, notes: next.notes }]
         : task.completions)
     return taskResponse({ ...updatedTask, goal: task.goal, completions, retakeInProgress: task.retakeInProgress, retakeNote: task.retakeNote }, schedule)
-  })
+  }
+  return typeof prisma.$transaction === 'function' ? prisma.$transaction(update) : update(prisma)
+}
+
+export async function updateDailyTask(taskId, input, userId, prisma = getPrismaClient()) {
+  return updateDailyTaskRecord(taskId, input, userId, prisma)
+}
+
+export async function completeDailyTask(taskId, notes, userId, prisma = getPrismaClient()) {
+  return updateDailyTaskRecord(taskId, { status: 'Completed', ...(notes !== undefined ? { notes } : {}) }, userId, prisma, true)
 }
 
 export async function startTaskRetake(taskId, userId, prisma = getPrismaClient()) {

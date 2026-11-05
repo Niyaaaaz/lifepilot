@@ -1,0 +1,136 @@
+.instructor-dashboard .page-title {
+  margin-bottom: 30px;
+}
+
+.instructor-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.instructor-dashboard-stats article,
+.instructor-dashboard-card {
+  border: 1px solid var(--dash-line);
+  border-radius: 12px;
+  background: var(--dash-surface);
+}
+
+.instructor-dashboard-stats article {
+  display: grid;
+  gap: 7px;
+  padding: 18px;
+}
+
+.instructor-dashboard-stats span,
+.instructor-dashboard-stats small,
+.instructor-dashboard-goal span,
+.instructor-dashboard-task small {
+  color: var(--dash-muted);
+  font-size: 10px;
+}
+
+.instructor-dashboard-stats strong {
+  font: 800 26px Manrope, sans-serif;
+}
+
+.instructor-dashboard-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.instructor-dashboard-card {
+  min-width: 0;
+  padding: 20px;
+}
+
+.instructor-dashboard-card .section-heading {
+  margin-bottom: 16px;
+}
+
+.instructor-dashboard-goal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  padding: 13px 0;
+  border-top: 1px solid var(--dash-line);
+}
+
+.instructor-dashboard-goal strong,
+.instructor-dashboard-goal span {
+  display: block;
+}
+
+.instructor-dashboard-goal strong,
+.instructor-dashboard-task strong {
+  overflow: hidden;
+  color: var(--dash-text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+}
+
+.instructor-dashboard-goal span {
+  margin-top: 5px;
+  text-transform: capitalize;
+}
+
+.instructor-dashboard-goal>b {
+  color: var(--dash-accent);
+  font-size: 11px;
+}
+
+.instructor-dashboard-progress {
+  grid-column: 1 / -1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: var(--dash-surface-2);
+}
+
+.instructor-dashboard-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--dash-accent);
+}
+
+.instructor-dashboard-task {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-top: 1px solid var(--dash-line);
+}
+
+.instructor-dashboard-task>span {
+  width: 42px;
+  color: var(--dash-accent);
+  font-size: 10px;
+}
+
+.instructor-dashboard-task>div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.instructor-dashboard-task>b {
+  margin-left: auto;
+  color: var(--dash-mint);
+}
+
+.instructor-dashboard-empty {
+  margin: 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--dash-line);
+  color: var(--dash-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .instructor-dashboard-stats,
+  .instructor-dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+}

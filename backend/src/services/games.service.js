@@ -1,9 +1,25 @@
 import { getPrismaClient } from '../config/database.js'
 import { HttpError } from '../middleware/httpError.js'
 
-function googleSearchUrl(name) {
-  const query = new URLSearchParams({ q: `play ${name} online` })
-  return `https://www.google.com/search?${query.toString()}`
+const legacyCategories = {
+  'Focus Games': 'Focus and Concentration',
+  'Strategy Games': 'Chess and Strategy',
+  Chess: 'Chess and Strategy',
+}
+
+function playableGameUrl(value) {
+  if (!value) return ''
+  try {
+    const url = new URL(value)
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return ''
+    if (
+      /^(.+\.)?google\.[a-z.]+$/i.test(url.hostname)
+      && /^\/search(?:\/|$)/i.test(url.pathname)
+    ) return ''
+    return url.href
+  } catch {
+    return ''
+  }
 }
 
 function gameResponse(game) {
@@ -11,10 +27,10 @@ function gameResponse(game) {
     id: game.id,
     name: game.name,
     description: game.description,
-    category: game.category,
+    category: legacyCategories[game.category] || game.category,
+    gameUrl: playableGameUrl(game.gameUrl),
     thumbnailUrl: game.thumbnailUrl || '',
     icon: game.icon || '🎮',
-    searchUrl: googleSearchUrl(game.name),
     createdAt: game.createdAt.toISOString(),
     updatedAt: game.updatedAt.toISOString(),
   }
@@ -43,9 +59,9 @@ export async function createGame(input, userId, prisma = getPrismaClient()) {
         name: input.name,
         description: input.description,
         category: input.category,
+        gameUrl: input.gameUrl,
         thumbnailUrl: input.thumbnailUrl || null,
         icon: input.icon || null,
-        gameUrl: googleSearchUrl(input.name),
       },
     })
     return gameResponse(game)
@@ -67,9 +83,9 @@ export async function updateGame(gameId, input, userId, prisma = getPrismaClient
         name: input.name,
         description: input.description,
         category: input.category,
+        gameUrl: input.gameUrl,
         thumbnailUrl: input.thumbnailUrl || null,
         icon: input.icon || null,
-        gameUrl: googleSearchUrl(input.name),
       },
     })
     return gameResponse(game)

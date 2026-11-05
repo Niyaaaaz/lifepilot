@@ -66,7 +66,7 @@ export default function DailyPlannerManual({ notify }) {
   }
   useEffect(() => {
     let active = true
-    apiRequest(`/daily/tasks?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
+    apiRequest(`/tasks?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
       .then(({ tasks: loadedTasks }) => {
         if (active) {
           setTasks(loadedTasks.map((task) => ({
@@ -147,7 +147,7 @@ export default function DailyPlannerManual({ notify }) {
       notes: updatedTask.notes,
     }
     const saved = await persistTask(() => apiRequest(
-      existing ? `/daily/tasks/${encodeURIComponent(existing.id)}` : '/daily/tasks',
+      existing ? `/tasks/${encodeURIComponent(existing.id)}` : '/tasks',
       { method: existing ? 'PATCH' : 'POST', body: JSON.stringify(taskBody) },
     ))
     if (!saved) return
@@ -158,22 +158,24 @@ export default function DailyPlannerManual({ notify }) {
 
   const updateStatus = async (task, status) => {
     if (task.status === status) return
-    return persistTask(() => apiRequest(`/daily/tasks/${encodeURIComponent(task.id)}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status }),
-    }))
+    return persistTask(() => status === 'Completed'
+      ? apiRequest(`/tasks/${encodeURIComponent(task.id)}/complete`, { method: 'POST', body: JSON.stringify({}) })
+      : apiRequest(`/tasks/${encodeURIComponent(task.id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      }))
   }
 
   const retake = async (task) => {
     if (task.status !== 'Completed' || task.retakeInProgress) return
-    const saved = await persistTask(() => apiRequest(`/daily/tasks/${encodeURIComponent(task.id)}/retake`, { method: 'POST' }))
+    const saved = await persistTask(() => apiRequest(`/tasks/${encodeURIComponent(task.id)}/retake`, { method: 'POST' }))
     if (!saved) return
     setNotice(`Retake started: ${task.activity}. It remains Completed while you work on the attempt.`)
   }
 
   const completeRetake = async (task) => {
     if (task.status !== 'Completed' || !task.retakeInProgress) return
-    const saved = await persistTask(() => apiRequest(`/daily/tasks/${encodeURIComponent(task.id)}/retake/complete`, {
+    const saved = await persistTask(() => apiRequest(`/tasks/${encodeURIComponent(task.id)}/retake/complete`, {
       method: 'POST',
       body: JSON.stringify({ notes: task.retakeNote?.trim() || '' }),
     }))
@@ -200,7 +202,7 @@ export default function DailyPlannerManual({ notify }) {
   const deletePersonalTask = async (task) => {
     if (task.source !== 'personal' || !window.confirm(`Delete "${task.activity}"?`)) return
     try {
-      await apiRequest(`/daily/tasks/${encodeURIComponent(task.id)}`, { method: 'DELETE' })
+      await apiRequest(`/tasks/${encodeURIComponent(task.id)}`, { method: 'DELETE' })
       setTasks((current) => current.filter((item) => item.id !== task.id))
       setStorageError('')
     } catch (error) {

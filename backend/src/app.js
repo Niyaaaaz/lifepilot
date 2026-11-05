@@ -9,6 +9,13 @@ import { createDailyTasksRouter } from './routes/dailyTasks.routes.js'
 import { createDatabaseHealthRouter } from './routes/databaseHealth.routes.js'
 import { createGoalsRouter } from './routes/goals.routes.js'
 import { createGamesRouter } from './routes/games.routes.js'
+import {
+  createDashboardRouter,
+  createPreferencesRouter,
+  createUserRouter,
+} from './routes/account.routes.js'
+import { createMilestonesRouter } from './routes/milestones.routes.js'
+import { createTimetableRouter } from './routes/timetable.routes.js'
 import healthRouter from './routes/health.routes.js'
 
 export function createApp(options = {}) {
@@ -22,9 +29,16 @@ export function createApp(options = {}) {
   app.use('/api/health', healthRouter)
   app.use('/api/health/database', createDatabaseHealthRouter(options))
   app.use('/api/auth', createAuthRouter(options))
+  app.use('/api/users', createUserRouter(options))
+  app.use('/api/preferences', createPreferencesRouter(options))
+  app.use('/api/dashboard', createDashboardRouter(options))
   app.use('/api/daily/tasks', createDailyTasksRouter(options))
+  app.use('/api/tasks', createDailyTasksRouter(options))
   app.use('/api/goals', createGoalsRouter(options))
+  app.use('/api', createMilestonesRouter(options))
   app.use('/api/games', createGamesRouter(options))
+  app.use('/api/gaming', createGamesRouter(options))
+  app.use('/api/timetable', createTimetableRouter(options))
   app.use('/api', notFound)
   app.use(errorHandler)
 

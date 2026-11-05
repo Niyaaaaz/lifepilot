@@ -1,17 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './InstructorApp.css'
+import './InstructorDashboard.css'
 import DailyPlanner from './DailyPlannerManual'
 import GamingSession from './GamingSession'
 import GoalInstructor from './GoalInstructor'
+import TimetableCreator from './TimetableCreator'
 import { ThemeSelect } from './ThemeContext'
 import { useTheme } from './ThemeState'
 import { useAuth } from './AuthState'
+import { apiRequest } from './lib/api'
 
-const nav = [['daily', '✦', 'Daily Instructor'], ['goals', '◎', 'Goal Instructor'], ['gaming', '🎮', 'Brain Training'], ['account', '●', 'Account']]
-const updateRoute = (id) => { window.history.pushState({}, '', id ? `#${id}` : window.location.pathname); window.dispatchEvent(new Event('hashchange')) }
+const nav = [['daily', '✦', 'Daily Instructor'], ['goals', '◎', 'Goal Instructor'], ['timetable', '◷', 'AI Timetable Creator'], ['gaming', '🎮', 'Brain Training'], ['account', '●', 'Account']]
+const updateRoute = (id) => {
+  const route = id === 'dashboard' ? 'instructor-dashboard' : id
+  window.history.pushState({}, '', route ? `#${route}` : window.location.pathname)
+  window.dispatchEvent(new Event('hashchange'))
+}
 
 function InstructorApp({ initialPage }) {
-  const [page, setPage] = useState(nav.some(([id]) => id === initialPage) ? initialPage : 'daily')
+  const [page, setPage] = useState(initialPage === 'instructor-dashboard' || initialPage === 'dashboard'
+    ? 'dashboard'
+    : nav.some(([id]) => id === initialPage) ? initialPage : 'daily')
   const { resolvedTheme } = useTheme(); const [sidebar, setSidebar] = useState(false); const [profile, setProfile] = useState(false); const [toast, setToast] = useState('')
   const { user, logout } = useAuth()
   const notify = (message) => { setToast(message); window.setTimeout(() => setToast(''), 2200) }
@@ -26,7 +35,59 @@ function InstructorApp({ initialPage }) {
   }
   const displayName = user?.name || 'LifePilot user'
   const initials = displayName.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase()
-  return <div className={`instructor-shell ${resolvedTheme}`}><aside className={`instructor-sidebar ${sidebar ? 'open' : ''}`}><div className="instructor-brand"><span>✦</span><strong>Life<span>Pilot</span></strong></div><div className="side-label">YOUR INSTRUCTORS</div><nav>{nav.map(([id, icon, label]) => <button className={page === id ? 'active' : ''} key={id} onClick={() => go(id)}><i>{icon}</i>{label}{page === id && <b>→</b>}</button>)}</nav><div className="side-label side-space">YOUR SPACE</div><nav><button onClick={() => go('dashboard')}><i>⌂</i>Dashboard</button><button onClick={() => notify('Achievements are being tallied.')}><i>♨</i>Achievements</button><button onClick={() => notify('Progress analytics are ready in each instructor.')}><i>↗</i>Progress</button><button onClick={() => notify('Settings saved locally.')}><i>⚙</i>Settings</button></nav><div className="sidebar-bottom"><div className="mini-user"><span>{initials}</span><div><strong>{displayName}</strong><small>{user?.email}</small></div><b>•••</b></div><button className="back-link" onClick={performLogout}>Sign out</button></div></aside><main className="instructor-main"><header className="instructor-topbar"><button className="hamburger" onClick={() => setSidebar(!sidebar)}>☰</button><div className="crumb">LifePilot <span>/</span> <strong>{nav.find(([id]) => id === page)?.[2]}</strong></div><div className="top-actions"><ThemeSelect compact /><button className="icon-button" onClick={() => notify('You are all caught up.')}>♧</button><div className="profile-wrap"><button className="profile-button" onClick={() => setProfile(!profile)}><span>{initials}</span><strong>{displayName.split(' ')[0]}</strong><b>⌄</b></button>{profile && <div className="profile-menu"><strong>{displayName}</strong><button onClick={() => go('account')}>Account</button><button onClick={performLogout}>Sign out</button></div>}</div></div></header><div className="instructor-content">{page === 'daily' && <DailyPage notify={notify} />}{page === 'goals' && <GoalInstructor />}{page === 'gaming' && <GamingSession onBackToDashboard={() => go('dashboard')} />}</div></main>{toast && <div className="instructor-toast">✓ <span>{toast}</span></div>}</div>
+  const pageTitle = nav.find(([id]) => id === page)?.[2] || (page === 'dashboard' ? 'Dashboard' : 'LifePilot')
+  return <div className={`instructor-shell ${resolvedTheme}`}><aside className={`instructor-sidebar ${sidebar ? 'open' : ''}`}><div className="instructor-brand"><span>✦</span><strong>Life<span>Pilot</span></strong></div><div className="side-label">YOUR INSTRUCTORS</div><nav>{nav.map(([id, icon, label]) => <button className={page === id ? 'active' : ''} key={id} onClick={() => go(id)}><i>{icon}</i>{label}{page === id && <b>→</b>}</button>)}</nav><div className="side-label side-space">YOUR SPACE</div><nav><button className={page === 'dashboard' ? 'active' : ''} onClick={() => go('dashboard')}><i>⌂</i>Dashboard{page === 'dashboard' && <b>→</b>}</button><button onClick={() => notify('Achievements are being tallied.')}><i>♨</i>Achievements</button><button onClick={() => notify('Progress analytics are ready in each instructor.')}><i>↗</i>Progress</button><button onClick={() => notify('Settings saved locally.')}><i>⚙</i>Settings</button></nav><div className="sidebar-bottom"><div className="mini-user"><span>{initials}</span><div><strong>{displayName}</strong><small>{user?.email}</small></div><b>•••</b></div><button className="back-link" onClick={performLogout}>Sign out</button></div></aside><main className="instructor-main"><header className="instructor-topbar"><button className="hamburger" onClick={() => setSidebar(!sidebar)}>☰</button><div className="crumb">LifePilot <span>/</span> <strong>{pageTitle}</strong></div><div className="top-actions"><ThemeSelect compact /><button className="icon-button" onClick={() => notify('You are all caught up.')}>♧</button><div className="profile-wrap"><button className="profile-button" onClick={() => setProfile(!profile)}><span>{initials}</span><strong>{displayName.split(' ')[0]}</strong><b>⌄</b></button>{profile && <div className="profile-menu"><strong>{displayName}</strong><button onClick={() => go('account')}>Account</button><button onClick={performLogout}>Sign out</button></div>}</div></div></header><div className="instructor-content">{page === 'dashboard' && <DashboardPage />}{page === 'daily' && <DailyPage notify={notify} />    }{page === 'goals' && <GoalInstructor />}{page === 'timetable' && <TimetableCreator />}{page === 'gaming' && <GamingSession onBackToDashboard={() => go('dashboard')} />}</div></main>{toast && <div className="instructor-toast">✓ <span>{toast}</span></div>}</div>
+}
+
+function DashboardPage() {
+  const [dashboard, setDashboard] = useState(null)
+  const [error, setError] = useState('')
+  const [reload, setReload] = useState(0)
+  useEffect(() => {
+    let active = true
+    apiRequest('/dashboard')
+      .then(({ dashboard: result }) => {
+        if (!active) return
+        setDashboard(result)
+        setError('')
+      })
+      .catch((loadError) => {
+        if (active) setError(loadError.message || 'Dashboard data could not be loaded.')
+      })
+    return () => { active = false }
+  }, [reload])
+
+  if (error) return <section className="instructor-dashboard"><DashboardHeading title="Dashboard" subtitle={error} /><button className="primary-action" type="button" onClick={() => setReload((count) => count + 1)}>Try again</button></section>
+  if (!dashboard) return <section className="instructor-dashboard" aria-live="polite"><DashboardHeading title="Dashboard" subtitle="Loading your saved progress…" /></section>
+
+  return (
+    <section className="instructor-dashboard">
+      <DashboardHeading title={`Welcome back, ${dashboard.user.name || 'there'} 👋`} subtitle="Your goals and daily progress, saved to your LifePilot account." />
+      <div className="instructor-dashboard-stats">
+        <article><span>Active goals</span><strong>{dashboard.statistics.activeGoals}</strong><small>{dashboard.statistics.completedGoals} completed</small></article>
+        <article><span>Tasks completed</span><strong>{dashboard.statistics.completedTasks}</strong><small>{dashboard.statistics.pendingTasks} remaining</small></article>
+        <article><span>Today’s progress</span><strong>{dashboard.statistics.completedToday}/{dashboard.statistics.todayTasks}</strong><small>{dashboard.statistics.pendingToday} left today</small></article>
+      </div>
+      <div className="instructor-dashboard-columns">
+        <section className="instructor-dashboard-card">
+          <div className="section-heading"><div><span className="section-kicker">YOUR GOALS</span><h2>Keep moving forward</h2></div></div>
+          {dashboard.goals.items.length
+            ? dashboard.goals.items.map((goal) => <article className="instructor-dashboard-goal" key={goal.id}><div><strong>{goal.title}</strong><span>{goal.status}{goal.targetDate ? ` · Due ${goal.targetDate}` : ''}</span></div><b>{goal.progress}%</b><div className="instructor-dashboard-progress"><i style={{ width: `${goal.progress}%` }} /></div></article>)
+            : <p className="instructor-dashboard-empty">No goals saved yet. Your Goal Instructor is ready when you are.</p>}
+        </section>
+        <section className="instructor-dashboard-card">
+          <div className="section-heading"><div><span className="section-kicker">TODAY</span><h2>Your schedule</h2></div></div>
+          {dashboard.todayTasks.length
+            ? dashboard.todayTasks.map((task) => <article className="instructor-dashboard-task" key={`${task.id}-${task.startTime}`}><span>{task.startTime || '—'}</span><div><strong>{task.title}</strong><small>{task.status === 'completed' ? 'Completed' : task.status.replace('_', ' ')}</small></div>{task.status === 'completed' && <b aria-label="Completed">✓</b>}</article>)
+            : <p className="instructor-dashboard-empty">No tasks scheduled for today.</p>}
+        </section>
+      </div>
+    </section>
+  )
+}
+
+function DashboardHeading({ title, subtitle }) {
+  return <div className="page-title"><div><span className="page-eyebrow">YOUR LIFE, IN VIEW</span><h1>{title}</h1><p>{subtitle}</p></div></div>
 }
 
 function DailyPage({ notify }) {
